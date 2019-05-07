@@ -15,6 +15,7 @@ class View
     private $viewFile;
     private $layout;
     private $params;
+    private $themeFolder;
 
     public function __construct($viewName = '', array $params = [], $theme = null)
     {
@@ -31,7 +32,7 @@ class View
     {
         return $this->route;
     }
-    
+
     public function getParams()
     {
         return $this->params;
@@ -52,14 +53,15 @@ class View
      * @param array $params
      * @param string $view
      * @return string
+     * @throws \Exception
      */
     public function output(array $params = array(), $view = '')
     {
         ob_start();
-             $viewFile = $this->getLayoutControllerFile($view);
-             extract($params);
-             require $viewFile.$this->getViewFileExtension();
-         return ob_get_clean();
+        $viewFile = $this->getLayoutControllerFile($view);
+        extract($params);
+        require $viewFile.$this->getViewFileExtension();
+        return ob_get_clean();
     }
 
     /**
@@ -68,7 +70,7 @@ class View
      * If no base defined and module exist, check in module view folder
      * If theme, check in theme folder.
      *
-     * If file not found in theme folder,
+     * If file not found in theme folder, check View folder
      * @param string $view
      * @param string $base
      * @return string
@@ -79,28 +81,39 @@ class View
         $viewFileName = $view ? $view : $this->viewFile;
 
         //if there exist a base path from router array use, else if module use
-        $baseBath = $base ? $base : ( $this->route->getBasePath()?: ( $this->route->getModule() ? 'Modules'.DS.ucfirst($this->route->getModule()).DS :''));
+        $basePath = $this->getBasePath($base);
 
-        $viewFolder = $themeFolder = static::getThemeFolder($baseBath);
+        $viewFolder = $this->themeFolder = $this->getThemeFolder($basePath);
 
-        if(!is_dir($themeFolder)){//if theme or package base directory doesn't exist
-           $viewFolder = static::getViewFolder($baseBath);
+        if(!is_dir($this->themeFolder)){
+            //if theme or package base directory doesn't exist
+            $viewFolder = $this->getViewFolder($basePath);
         }
 
         $file = $viewFolder.DS.strtolower($this->route->getController()).DS.$viewFileName;
-        
+
         return $file;
 
     }
 
-    public static function getThemeFolder(){
+    public function getBasePath($base = ''){
+        //if there exist a base path from router array use, else if module use
+        $basePath = $base ? $base : ( $this->route->getBasePath()?: ( $this->route->getModule() ? 'Modules'.DS.ucfirst($this->route->getModule()).DS :''));
+        return $basePath;
+    }
+
+    /**
+     * Get the theme folder, Themes, in base path. Base path can be in Package
+     * @param string $base
+     * @return null|string
+     * @throws \Exception
+     */
+    public function getThemeFolder($base=''){
 
         $themeFolder = null;
-        $base = '';
 
         if($themeName = \leo()->getTheme()->getName())
         {//theme in config
-            $themeFolder = APP_PATH.DS.$base.'Themes';
             $themeFolder = APP_PATH.DS.($base?$base.DS : '') .'Themes'.DS.$themeName;
         }
 
@@ -108,27 +121,34 @@ class View
     }
 
     /**
-     * Return the views folder where layout view files should be searched
+     * Return the views folder where layout view files should be searched.
+     * If a theme is being used, The theme folder is used else app/Views folder is used
      * @param string $base
      * @return string
      * @throws \Exception
      */
-    public static function getViewFolder($base = '')
+    public function getViewFolder($base = '')
     {
-        $viewFolder = APP_PATH.DS.$base.'Views';
+
+        if(!$this->themeFolder) {
+            $viewFolder = APP_PATH . DS . $base . 'Views';
+        } else {
+            $viewFolder = $this->themeFolder;
+        }
 
         return $viewFolder;
     }
-    
+
     /**
      * Return the layout folder location. If a base path is given,
      * it returns the layout folder in the base path location
      * @param string $base
      * @return string
+     * @throws \Exception
      */
-    public static function getLayoutFolder($base='')
+    public function getLayoutFolder($base='')
     {
-        return static::getViewFolder($base).DS.'layout';
+        return $this->getViewFolder($base).DS.'layout';
     }
 
     /**
@@ -137,20 +157,20 @@ class View
      * @return string
      * @throws \Exception
      */
-    public static function getLayoutFile($layoutFile)
+    public function getLayoutFile($layoutFile)
     {
         /**
          * @var Route $route
          */
         $route = Leo::gc('router')->getRoute();
-        
+
         if(!file_exists(//packages have base basepath
-                $layout_file = static::getLayoutFolder($route->getBasePath())
+                $layout_file = $this->getLayoutFolder($route->getBasePath())
                     . DS . $layoutFile.$route->getFileExtention()
             )
             AND
             !file_exists(
-                $layout_file = static::getLayoutFolder().
+                $layout_file = $this->getLayoutFolder().
                     DS . $layoutFile.
                     $route->getFileExtention()
             )
@@ -159,7 +179,7 @@ class View
         {
             throw new \Exception($layout_file . ' could not be found.');
         }
-        
+
         return $layout_file;
     }
 
@@ -189,7 +209,7 @@ class View
         $this->layout = $layout;
         return $this;
     }
-        
-    
+
+
 
 }
