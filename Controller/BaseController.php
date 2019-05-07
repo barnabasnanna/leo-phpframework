@@ -19,9 +19,10 @@ abstract class BaseController extends ObjectBase
 {
     /**
      *
-     * @var string A custom layout file used to wrap view files before rendering
+     * @var string A custom layout file used to wrap view files before rendering.
+     * Can use this to add custom template
      */
-    protected $layoutFile;
+    protected $templateFile;
 
     /**
      * Default action called if none set in requested route
@@ -44,14 +45,14 @@ abstract class BaseController extends ObjectBase
     /**
      * @return string
      */
-    public function getLayoutFile()
+    public function getTemplateFile()
     {
-        return $this->layoutFile;
+        return $this->templateFile;
     }
 
-    public function setLayoutFile($layoutFile='')
+    public function setTemplateFile($templateFile='')
     {
-        $this->layoutFile = $layoutFile;
+        $this->templateFile = $templateFile;
     }
 
     public function getClassName()
@@ -231,7 +232,7 @@ abstract class BaseController extends ObjectBase
      */
     private function addCustomLayoutFile($content = '')
     {
-        return $this->render($this->getLayoutFile(), $content);
+        return $this->render($this->getTemplateFile(), $content);
     }
 
     /**
@@ -275,6 +276,7 @@ abstract class BaseController extends ObjectBase
 
     /**
      * Send response to the browser
+     * @throws Exception
      */
     public function sendResponse()
     {
