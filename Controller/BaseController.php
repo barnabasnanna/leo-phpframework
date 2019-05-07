@@ -15,33 +15,40 @@ use Leo\View\View;
  *
  * @author Barnabas
  */
-Abstract class BaseController extends ObjectBase
+abstract class BaseController extends ObjectBase
 {
     /**
      *
-     * @var string A layout file used to wrap view files before rendering 
+     * @var string A custom layout file used to wrap view files before rendering
      */
     protected $layoutFile;
 
     /**
      * Default action called if none set in requested route
-     * @var string 
+     * @var string
      */
     protected $defaultAction = false;
 
     /**
      * A temp container to store data during processing page request
-     * 
-     * @var array 
+     *
+     * @var array
      */
     protected $_class_data_ = [];
-    
-    
+
+    /**
+     * @var View
+     */
+    protected $viewClass = null;
+
+    /**
+     * @return string
+     */
     public function getLayoutFile()
     {
         return $this->layoutFile;
     }
-    
+
     public function setLayoutFile($layoutFile='')
     {
         $this->layoutFile = $layoutFile;
@@ -76,7 +83,7 @@ Abstract class BaseController extends ObjectBase
     {
         return $this->_class_data_;
     }
-    
+
     /**
      * Get data from class storage
      * @param string $name data storage key
@@ -94,11 +101,11 @@ Abstract class BaseController extends ObjectBase
         elseif($throwException)
         {
             throw new \Exception($name . lang(" not found in controller data"));
-        }      
-        
+        }
+
         return $default;
     }
-    
+
 
     /**
      * Remove data from class storage
@@ -110,7 +117,7 @@ Abstract class BaseController extends ObjectBase
             unset($this->_class_data_[$name]);
         }
     }
-    
+
     /**
      * Refresh page
      */
@@ -133,17 +140,18 @@ Abstract class BaseController extends ObjectBase
     {//TODO add protocol from $_SERVER variable
         leo()->getRouter()->redirect($this->getHref($url_paths), $replace);
     }
-    
+
     /**
      * Default action to run if not set.
-     * 
+     *
      * @return string
+     * @throws Exception
      */
     public function getDefaultAction()
     {
         return !$this->defaultAction ? ( Leo::getConfig('defaultAction')?:'index' ) : $this->defaultAction;
     }
-    
+
     /**
      * Action name
      * @param string $action
@@ -152,7 +160,11 @@ Abstract class BaseController extends ObjectBase
     {
         $this->defaultAction = $action;
     }
-    
+
+    /**
+     * @return mixed
+     * @throws Exception
+     */
     public function getActionPrefix()
     {
         return Leo::getConfig('actionPrefix');
@@ -170,20 +182,21 @@ Abstract class BaseController extends ObjectBase
         return $href.( !empty($url) ? '?'. http_build_query($url) : '');
 
     }
-    
+
     /**
      * Load the view file and store the content
      * @param string $view view file path
      * @param array $params parameters to be passed to the view file
      * @param string $theme Theme name
+     * @throws Exception
      */
     public function view($view = '', array $params = [], $theme=null)
     {
         if($view) {
-            
-            $view_class = new \Leo\View\View($view, $params, $theme);
 
-            Leo::$content = $this->addCustomLayoutFile($view_class->output($params));
+            $this->viewClass = new \Leo\View\View($view, $params, $theme);
+
+            Leo::$content = $this->addCustomLayoutFile($this->viewClass->output($params));
         }
 
     }
@@ -214,7 +227,7 @@ Abstract class BaseController extends ObjectBase
      * If the controller has a custom layout file add its make up
      * @param string $content content of the view file from controller
      * @return string
-     * @internal param View $view_class
+     * @throws Exception
      */
     private function addCustomLayoutFile($content = '')
     {
@@ -230,7 +243,7 @@ Abstract class BaseController extends ObjectBase
      */
     public function includeLayoutFile($layoutFile = '' , array $params = [])
     {
-        $layout_file = View::getLayoutFile($layoutFile);
+        $layout_file = $this->viewClass->getLayoutFile($layoutFile);
 
         ob_start();
         extract($params);
@@ -409,7 +422,8 @@ Abstract class BaseController extends ObjectBase
 
         if ($layoutFile) {
             ob_start();
-            include View::getLayoutFile($layoutFile);
+            $view = $this->viewClass ?: new View();
+            include $view->getLayoutFile($layoutFile);
             $content = ob_get_clean();
         }
 

@@ -17,6 +17,7 @@ use Leo\Exception\LogException;
 use Leo\Log\Writer;
 use Leo\Routing\RouteDi;
 use Leo\Routing\Router;
+use Leo\Theme\Theme;
 use Leo\View\View;
 use ReflectionMethod;
 use stdClass;
@@ -353,11 +354,13 @@ class Leo extends ObjectBase
         }
 
         if (is_string($themeName)) {//set theme name if given
-            $themeManager->setTheme($themeName);
+            /**
+             * @var $themeManager Theme
+             */
+            $themeManager->setName($themeName);
         }
 
     }
-
 
     /**
      * Checks if a configuration key exist in the configuration section searched.
