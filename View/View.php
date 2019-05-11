@@ -78,6 +78,8 @@ class View
      */
     public function getLayoutControllerFile($view = '', $base='')
     {
+        $file = null;
+
         $viewFileName = $view ? $view : $this->viewFile;
 
         //if there exist a base path from router array use, else if module use
@@ -85,12 +87,18 @@ class View
 
         $viewFolder = $this->themeFolder = $this->getThemeFolder($basePath);
 
-        if(!is_dir($this->themeFolder)){
-            //if theme or package base directory doesn't exist
-            $viewFolder = $this->getViewFolder($basePath);
+        if(is_dir($this->themeFolder)){//does the Theme directory exist
+            $file = $viewFolder.DS.strtolower($this->route->getController()).DS.$viewFileName;
+            if(!is_readable($file)){//does the file exist in theme folder
+                $file = null;
+            }
         }
 
-        $file = $viewFolder.DS.strtolower($this->route->getController()).DS.$viewFileName;
+        if($file===null && !is_dir($this->themeFolder)) {//if theme or package base directory doesn't exist
+            $this->themeFolder = null;
+            $viewFolder = $this->getViewFolder($basePath);
+            $file = $viewFolder . DS . strtolower($this->route->getController()) . DS . $viewFileName;
+        }
 
         return $file;
 
@@ -114,7 +122,7 @@ class View
 
         if($themeName = \leo()->getTheme()->getName())
         {//theme in config
-            $themeFolder = APP_PATH.DS.($base?$base.DS : '') .'Themes'.DS.$themeName;
+            $themeFolder = str_replace(DS.DS,DS,APP_PATH.DS.($base? $base.DS : '')) .'Themes'.DS.$themeName;
         }
 
         return $themeFolder;
@@ -209,7 +217,5 @@ class View
         $this->layout = $layout;
         return $this;
     }
-
-
 
 }

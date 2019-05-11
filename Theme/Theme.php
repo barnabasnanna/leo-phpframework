@@ -13,9 +13,9 @@ class Theme extends ObjectBase
 {
     protected $name = '';
     protected $themeDates = array(
-        'default' => '2015/11/05',
-        'jasmine' => '2018/11/03 - 2018/12/31',
-        'xmas' => '2018/12/25 - 2018/12/26'
+//        'default' => '2015/11/05', //if theme has no end date, it remains valid after start date
+//        'jasmine' => '2018/11/03 - 2018/12/31',
+//        'xmas' => '2018/12/25 - 2018/12/26'
     );
 
     public function setName($name){
@@ -43,11 +43,14 @@ class Theme extends ObjectBase
             $today = new \DateTime('now'); //today's date
             foreach ($this->themeDates as $name => $dateRange) {
                 @list($start, $end) = explode('-', $dateRange);
+                $endDate = null;
                 $startDate = \DateTime::createFromFormat('Y/m/d', trim($start));
-                $endDate = \DateTime::createFromFormat('Y/m/d', trim($end));
+                if(isset($end)) {$endDate = \DateTime::createFromFormat('Y/m/d', trim($end));}
 
                 //Get the days difference between the start dates and today
-                if ($today >= $startDate && (($end && $today <= $endDate) OR (!$end))) {
+
+                //is the start_date before today AND if has end date, has it expired. If not remains active
+                if ($today >= $startDate && ( ($end && $today <= $endDate) OR (!$end))) {
                     $startDates[$name] = ($startDate->diff($today))->format('%a');
                 }
             }
@@ -65,7 +68,4 @@ class Theme extends ObjectBase
         return $this->name;
 
     }
-
-
-
 }
