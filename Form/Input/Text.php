@@ -17,7 +17,7 @@ class Text extends Input
 {
 
     protected $type = 'text';
-    protected $template = '<label %s for="%s">%s</label> <input type="text" id="%s" name="%s" %s value="%s"/>%s<br/>';
+    protected $template = '<label %s for="%s">%s</label> <input type="text" id="%s" name="%s" %s value="%s"/>%s';
    
     
     /**
