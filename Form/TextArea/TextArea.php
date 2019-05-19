@@ -26,7 +26,7 @@ class TextArea extends Input
     protected $options = [];
     protected $label;
     protected $wrap;
-    protected $template = '<label %s for="%s">%s</label><textarea id="%s" name="%s" %s>%s</textarea>%s<br/>';
+    protected $template = '<label %s for="%s">%s</label><textarea id="%s" name="%s" %s>%s</textarea>%s';
 
     /**
      * Adds required option to form element
