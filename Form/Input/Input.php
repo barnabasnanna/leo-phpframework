@@ -164,6 +164,7 @@ abstract class Input implements InputInterface
     public function setId($id)
     {
         $this->id = $id;
+        return $this;
     }
 
     public function getName()
