@@ -106,7 +106,7 @@ class View
 
     public function getBasePath($base = ''){
         //if there exist a base path from router array use, else if module use
-        $basePath = $base ? $base : ( $this->route->getBasePath()?: ( $this->route->getModule() ? 'Modules'.DS.ucfirst($this->route->getModule()).DS :''));
+        $basePath = $base ? $base : ( $this->route->getBasePath()?: ( $this->route->getModule() ? 'Modules'.DS.ucfirst($this->route->getModule()) :''));
         return $basePath;
     }
 
@@ -139,7 +139,7 @@ class View
     {
 
         if(!$this->themeFolder) {
-            $viewFolder = APP_PATH . DS . $base . 'Views';
+            $viewFolder = APP_PATH . DS . $base . DS . 'Views';
         } else {
             $viewFolder = $this->themeFolder;
         }

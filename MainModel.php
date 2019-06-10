@@ -40,11 +40,20 @@ abstract class MainModel extends ObjectBase
         return !$this->hasErrors();
     }
 
+    /**
+     * Function to be run before validation is done
+     * Return true to continue with validation or false to discontinue
+     * @return bool
+     */
     protected function beforeValidate()
     {
         return true;
     }
 
+
+    /**
+     * Function run after validation has taken place
+     */
     protected function afterValidate()
     {
         

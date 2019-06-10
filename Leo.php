@@ -477,7 +477,7 @@ class Leo extends ObjectBase
     private function getControllerClass()
     {
         $controller = rtrim($this->getController(), self::getExt());
-        $subject = str_replace(BASE_PATH . '/', '', str_replace(VENDOR_PATH . '/', '', $controller));
+        $subject = str_replace(BASE_PATH . DS, '', str_replace(VENDOR_PATH . DS, '', $controller));
         return str_replace('/', '\\', $subject);
     }
 

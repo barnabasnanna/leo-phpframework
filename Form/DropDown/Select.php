@@ -25,7 +25,7 @@ class Select extends ObjectBase
     protected $wrap;
     protected $value;
     protected $label;
-    protected $template = '<label %s for="%s">%s</label><select id="%s" name="%s" %s>%s</select>%s<br/>';
+    protected $template = '<label %s for="%s">%s</label><select id="%s" name="%s" %s>%s</select>%s';
     protected $dropDownOptions = [];
     protected $options = [];
     protected $hint;

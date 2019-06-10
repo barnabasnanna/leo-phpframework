@@ -20,7 +20,7 @@ function lang($text = '', $lang = 'en')
 function sanitize($str = '', $lowerCase = false,$replace='_')
 {
     $s = preg_replace('/\W/', $replace, $str);
-    return $lowerCase ? strtolower($s) : $s;
+    return $lowerCase ? mb_strtolower($s) : $s;
 }
 
 /**
@@ -48,7 +48,7 @@ function ct($var)
 function clean($str = '', $lowerCase = false, $replace='')
 {
     $s = preg_replace('/[^a-zA-Z0-9]/', $replace, $str);
-    return $lowerCase ? strtolower($s) : $s;
+    return $lowerCase ? mb_strtolower($s) : $s;
 }
 
 /**
