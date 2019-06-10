@@ -386,9 +386,9 @@ class Route extends ObjectBase
      */
     public function getControllerPath($controller = '')
     {
-        $appControllerBaseFolder = APP_PATH . DS . $this->getBasePath(). 'Controllers';
+        $appControllerBaseFolder = APP_PATH . DS . $this->getBasePath(). DS. 'Controllers';
         
-        $leoControllerBaseFolder = CORE_PATH . DS . $this->getBasePath(). 'Controllers';
+        $leoControllerBaseFolder = CORE_PATH . DS . $this->getBasePath(). DS. 'Controllers';
         
         $controllerBaseFolder = \file_exists($appControllerBaseFolder) ? $appControllerBaseFolder : $leoControllerBaseFolder;
 
@@ -405,9 +405,9 @@ class Route extends ObjectBase
     {
         $basePath = $this->getBasePath();
         
-        $appModuleBaseFolder = APP_PATH . DS . $basePath .'Modules';
+        $appModuleBaseFolder = APP_PATH . DS . $basePath . DS .'Modules';
         
-        $leoModuleBaseFolder = CORE_PATH . DS . $basePath .'Modules';
+        $leoModuleBaseFolder = CORE_PATH . DS . $basePath . DS . 'Modules';
         
         $mFolder = file_exists($appModuleBaseFolder) ? $appModuleBaseFolder : $leoModuleBaseFolder;
         
@@ -426,7 +426,7 @@ class Route extends ObjectBase
         return $this->default_extension;
     }
 
-    public function getBasePath($stripSlash = false)
+    public function getBasePath($stripSlash = true)
     {
         if($this->basePath)
         {
