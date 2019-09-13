@@ -259,7 +259,7 @@ class ActiveRecord extends MainModel
      * @param array $selected_columns 
      * @return self | null
      */
-    public static function getByAttribute(array $attributes,array $selected_columns = ['*'])
+    public static function getByAttribute(array $attributes,array $selected_columns = ['*'], array $orderBy = [])
     {
         $db = leo()->getDb();
         
@@ -268,6 +268,14 @@ class ActiveRecord extends MainModel
         );
         
         $query = $db->table(static::getTableName())->select($selected_columns);
+
+        foreach ($orderBy as $order) {
+
+            if(is_array($order))
+            {
+                $query->order($order);
+            }
+        }
         
         //create where conditional of sql statement
         foreach($column_params['columns'] as $column_name=>$placeholder)
@@ -319,7 +327,7 @@ class ActiveRecord extends MainModel
     /**
      * @param array $attributes
      * @param array $select_columns
-     * @param array $orderBy array( array('column'=>'DESC'), array('column'=>'ASC') )
+     * @param array $orderBy array( array('column','DESC'), array('column','ASC') )
      * @return array
      */
     public static function getAllByAttribute(array $attributes, $select_columns = [], $orderBy=[])

@@ -463,7 +463,7 @@ class PackageManager extends ObjectBase implements I_PackageManager
     }
 
     /**
-     * Add package css to be render
+     * Add package css to be rendered
      * @param string $package_name package name
      * @param string $filename css file name in assets css folder
      * @param string $savename css file name used to save the file in www package folder

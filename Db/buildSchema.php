@@ -25,7 +25,6 @@ class buildSchema extends \Leo\Helpers\Constructor
     protected $charset = 'utf8mb4';
     protected $unique_index = [];
     protected $dropTableBeforeCreation = false;
-    protected $tableEngine = 'InnoDB';
 
     public function autoId($name)
     {
@@ -37,8 +36,8 @@ class buildSchema extends \Leo\Helpers\Constructor
     public function create($table, $ifNotExists = true)
     {
         $this->tableName = strval($table);
-
-        $this->s = "CREATE TABLE " . ($ifNotExists ? " IF NOT EXISTS " : "")
+        
+        $this->s = "CREATE TABLE " . ( $ifNotExists ? " IF NOT EXISTS " : "")
             . "  `$table` (%s)";
         return $this;
     }
@@ -47,19 +46,18 @@ class buildSchema extends \Leo\Helpers\Constructor
     public function int($name, $length = 11, $default = 0, $unsigned = true)
     {
         $length = $length <= 11 ? $length : 11;
-        $this->int[] = " `$name` int($length) " . ($unsigned ? "unsigned" : "") . " NOT NULL DEFAULT $default";
+        $this->int[] = " `$name` int($length) ".( $unsigned ? "unsigned" : "")." NOT NULL DEFAULT $default";
         return $this;
     }
 
     public function tinyInt($name, $length = 4, $default = 0, $unsigned = true)
     {
         $length = $length <= 4 ? $length : 4;
-        $this->tinyInt[] = " `$name` int($length) " . ($unsigned ? "unsigned" : "") . " NOT NULL DEFAULT $default";
+        $this->tinyInt[] = " `$name` int($length) ".( $unsigned ? "unsigned" : "")." NOT NULL DEFAULT $default";
         return $this;
     }
 
-    public function unique($name, $indexName = '')
-    {
+    public function unique($name, $indexName=''){
         $this->unique_index[] = " UNIQUE KEY $indexName ($name)";
         return $this;
     }
@@ -76,7 +74,7 @@ class buildSchema extends \Leo\Helpers\Constructor
     {
 
         $length = $length <= 20 ? $length : 20;
-        $this->bigInt[] = " `$name` bigint($length) " . ($unsigned ? "unsigned" : "") . " NOT NULL DEFAULT $default";
+        $this->bigInt[] = " `$name` bigint($length) ".( $unsigned ? "unsigned" : "")." NOT NULL DEFAULT $default";
         return $this;
     }
 
@@ -87,7 +85,7 @@ class buildSchema extends \Leo\Helpers\Constructor
      * @param string $default
      * @return $this
      */
-    public function varChar($name, $length = 255, $default = '')
+    public function varChar($name, $length = 255, $default ='')
     {
         $length = $length <= 255 ? $length : 255;
 
@@ -95,27 +93,27 @@ class buildSchema extends \Leo\Helpers\Constructor
         return $this;
     }
 
-    public function dateTime($name, $notNull = true, $default = '0000-00-00 00:00:00')
+    public function dateTime($name, $notNull=true, $default = '0000-00-00 00:00:00')
     {
-        if ($notNull) {
+        if($notNull) {
             $this->datetime[] = "`$name` DATETIME NOT NULL default '$default'";
-        } else {
+        }else {
             $this->datetime[] = "`$name` DATETIME NULL";
         }
         return $this;
     }
 
-    public function date($name, $notNull = true, $default = '0000-00-00')
+    public function date($name, $notNull=true, $default = '0000-00-00')
     {
-        if ($notNull) {
+        if($notNull) {
             $this->datetime[] = "`$name` DATE NOT NULL default '$default'";
-        } else {
+        }else {
             $this->datetime[] = "`$name` DATE NULL";
         }
         return $this;
     }
 
-    public function timestamp($name = 'modified_date')
+    public function timestamp($name='modified_date')
     {
         $this->timestamp[] = "`$name` timestamp NOT NULL DEFAULT NOW() ON UPDATE NOW()";
         return $this;
@@ -129,37 +127,27 @@ class buildSchema extends \Leo\Helpers\Constructor
 
     protected function createQuery()
     {
-        if ($this->dropTableBeforeCreation) {//drop the table first
-            $this->s = "DROP TABLE IF EXISTS {$this->tableName};" . $this->s;
+        if($this->dropTableBeforeCreation){//drop the table first
+            $this->s = "DROP TABLE IF EXISTS {$this->tableName};". $this->s;
         }
-
+        
         $sql = implode(',', array_merge($this->autoId, $this->int, $this->tinyInt, $this->bigInt, $this->varChar, $this->datetime, $this->timestamp, $this->text, array_unique($this->unique_index)));
-        $this->setSql(sprintf($this->s, $this->primaryKeyString() . $sql) . " ENGINE=" . $this->tableEngine . " DEFAULT CHARSET={$this->charset};");
+        $this->setSql(sprintf($this->s, $this->primaryKeyString() . $sql)." ENGINE=InnoDB DEFAULT CHARSET={$this->charset};");
     }
 
     private function primaryKeyString()
     {
-        return count($this->primaryKey) ? array_pop($this->primaryKey) . ',' : "";
+        return  count($this->primaryKey) ? array_pop($this->primaryKey) . ',' : "";
     }
 
-    public function charset($charset)
-    {
+    public function charset($charset){
         $this->charset = $charset;
         return $this;
     }
 
-    public function drop()
-    {
+    public function drop(){
         $this->dropTableBeforeCreation = true;
         return $this;
-    }
-
-    /**
-     * @param string $engine
-     */
-    public function engine($engine='InnoDB')
-    {
-        $this->tableEngine = $engine;
     }
 
 }

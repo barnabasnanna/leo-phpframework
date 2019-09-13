@@ -26,7 +26,7 @@ class TextArea extends Input
     protected $options = [];
     protected $label;
     protected $wrap;
-    protected $template = '<label %s for="%s">%s</label><textarea id="%s" name="%s" %s>%s</textarea>%s';
+    protected $template = '<label for="%s">%s</label><textarea id="%s" name="%s" %s>%s</textarea>%s<br/>';
 
     /**
      * Adds required option to form element
@@ -54,8 +54,7 @@ class TextArea extends Input
     public function __toString()
     {
         
-        return sprintf($this->getTemplate(),
-                $this->getLabelOptions(),
+        return sprintf($this->getTemplate(), 
                 $this->getId(),
                 $this->getLabel(),
                 $this->getId(),
@@ -97,7 +96,7 @@ class TextArea extends Input
         return $options;
     }
 
-    public function setName($name)
+    public function setName($name='')
     {
         $this->name = $name;
         return $this;
@@ -170,7 +169,7 @@ class TextArea extends Input
         return $this->id;
     }
 
-    public function setValue($value)
+    public function setValue($value='')
     {
         $this->value = $value;
         return $this;

@@ -12,14 +12,15 @@ class AnyInput extends Input
 {
 
     protected $type = 'text';
-    protected $template = '<label for="%s">%s</label> <input type="%s" id="%s" name="%s" %s value="%s"/>%s<br/>';
+    protected $template = '<label for="%s" %s>%s</label> <input type="%s" id="%s" name="%s" %s value="%s"/>%s';
     
     public function __toString()
     {
         try
         {
             return sprintf($this->getTemplate(), 
-                    $this->getId(), 
+                    $this->getId(),
+                    $this->getLabelOptions(),
                     $this->getLabel(),
                     $this->getType(),
                     $this->getId(), 

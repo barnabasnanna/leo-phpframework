@@ -93,12 +93,11 @@ class Table extends \Leo\ObjectBase
     }
     
     /**
-     * Interested columns to be displayed
+     * Interested columns to be displayed. If columns are not provided, the ActiveRecord columns are used
      * @return array 
      */
     protected function getColumns()
     {
-        
         return count($this->columns) 
                 ? 
                 array_keys($this->columns) 

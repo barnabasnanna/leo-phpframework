@@ -592,11 +592,6 @@ class Constructor
             else
             {
                 $this->addParams($params);
-
-                foreach ($column_values as $column => $value)
-                {
-                    $column_values[$column] = $value;
-                }
             }
         }
 

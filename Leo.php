@@ -390,7 +390,7 @@ class Leo extends ObjectBase
     private function runAction()
     {
 
-        $class = $this->getControllerClass();
+         $class = $this->getControllerClass();
 
         if (!$class) {
             if ('production' === LEO_RUNNING_MODE) {
@@ -403,7 +403,7 @@ class Leo extends ObjectBase
         /**
          * @var $controllerClass BaseController
          */
-        $controllerClass = new $class;
+        $controllerClass = new $class();
 
         $reflectionMethod = new \ReflectionMethod($controllerClass, $this->getAction($controllerClass)->action);
 
@@ -476,8 +476,8 @@ class Leo extends ObjectBase
 
     private function getControllerClass()
     {
-        $controller = rtrim($this->getController(), self::getExt());
-        $subject = str_replace(BASE_PATH . DS, '', str_replace(VENDOR_PATH . DS, '', $controller));
+         $controller = rtrim($this->getController(), self::getExt());
+         $subject = str_replace(BASE_PATH . DS, '', str_replace(VENDOR_PATH . DS, '', $controller));
         return str_replace('/', '\\', $subject);
     }
 
@@ -611,6 +611,15 @@ class Leo extends ObjectBase
     }
 
     /**
+     * Returns asset manager
+     * @return \Leo\Helpers\AssetManager
+     * @throws Exception
+     */
+    public function getAssetManager(){
+        return self::getComponent('assetManager');
+    }
+
+    /**
      * Returns package manager
      * @return \Leo\Event\EventManager
      * @throws Exception
@@ -691,7 +700,7 @@ class Leo extends ObjectBase
 
     public static function version()
     {
-        return '2.6';
+        return '2.7';
     }
 
 }

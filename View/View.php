@@ -38,7 +38,6 @@ class View
         return $this->params;
     }
 
-
     /**
      * View file extension
      * @return string
@@ -78,8 +77,6 @@ class View
      */
     public function getLayoutControllerFile($view = '', $base='')
     {
-        $file = null;
-
         $viewFileName = $view ? $view : $this->viewFile;
 
         //if there exist a base path from router array use, else if module use
@@ -87,18 +84,12 @@ class View
 
         $viewFolder = $this->themeFolder = $this->getThemeFolder($basePath);
 
-        if(is_dir($this->themeFolder)){//does the Theme directory exist
-            $file = $viewFolder.DS.strtolower($this->route->getController()).DS.$viewFileName;
-            if(!is_readable($file)){//does the file exist in theme folder
-                $file = null;
-            }
+        if(!is_dir($this->themeFolder)){
+            //if theme or package base directory doesn't exist
+            $viewFolder = $this->getViewFolder($basePath);
         }
 
-        if($file===null && !is_dir($this->themeFolder)) {//if theme or package base directory doesn't exist
-            $this->themeFolder = null;
-            $viewFolder = $this->getViewFolder($basePath);
-            $file = $viewFolder . DS . strtolower($this->route->getController()) . DS . $viewFileName;
-        }
+        $file = $viewFolder.DS.strtolower($this->route->getController()).DS.$viewFileName;
 
         return $file;
 
@@ -122,7 +113,7 @@ class View
 
         if($themeName = \leo()->getTheme()->getName())
         {//theme in config
-            $themeFolder = str_replace(DS.DS,DS,APP_PATH.DS.($base? $base.DS : '')) .'Themes'.DS.$themeName;
+            $themeFolder = APP_PATH.DS.($base? $base.DS : '') .'Themes'.DS.$themeName;
         }
 
         return $themeFolder;
@@ -139,7 +130,7 @@ class View
     {
 
         if(!$this->themeFolder) {
-            $viewFolder = APP_PATH . DS . $base . DS . 'Views';
+            $viewFolder = APP_PATH . DS . $base .DS. 'Views';
         } else {
             $viewFolder = $this->themeFolder;
         }
@@ -199,7 +190,9 @@ class View
      */
     public function includeFile($view = '' , array $params = [])
     {
-        return $this->output($params,$view);
+        if($view) {
+            return $this->output($params, $view);
+        }
     }
 
     /**
@@ -217,5 +210,7 @@ class View
         $this->layout = $layout;
         return $this;
     }
+
+
 
 }

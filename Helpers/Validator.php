@@ -759,14 +759,18 @@ class Validator
 
         if($property_value_confirm!=$property_value)
         {
-            $validation_methods = $this->getValidationMethods();
 
-            if (!empty($validation_methods[__FUNCTION__]['errorMessage']))
-            {
-                $template = $validation_methods[__FUNCTION__]['errorMessage'];
+            if(!empty($other['errorMessage'])){
+                return lang(strval($other['errorMessage']));
+            }else {
+                $validation_methods = $this->getValidationMethods();
 
-                return sprintf($template,
-                    $this->getObject()->getPropertyLabel($property));
+                if (!empty($validation_methods[__FUNCTION__]['errorMessage'])) {
+                    $template = $validation_methods[__FUNCTION__]['errorMessage'];
+
+                    return sprintf($template,
+                        $this->getObject()->getPropertyLabel($property));
+                }
             }
 
             return false;

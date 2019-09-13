@@ -100,7 +100,7 @@ abstract class Input implements InputInterface
      * @param bool $required
      * @return $this
      */
-    public function setRequired($required)
+    public function setRequired($required=true)
     {
         if($required)
         {
@@ -259,6 +259,7 @@ abstract class Input implements InputInterface
                 $this->getTemplate(), $this->wrap->container);
         
         $this->setTemplate($new_template);
+        return $this;
     }
     
     public function getHint()
