@@ -1082,10 +1082,11 @@ class Constructor
     public function loadAll(ActiveRecord $class)
     {
         $rows = [];
-                
-        foreach($this->getResult() as $row)
-        {
-            $rows[] = static::instantiate($row, $class);
+
+        if(is_array($this->getResult())) {
+            foreach ($this->getResult() as $row) {
+                $rows[] = static::instantiate($row, $class);
+            }
         }
         
         return $rows;

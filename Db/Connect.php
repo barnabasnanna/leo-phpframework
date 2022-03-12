@@ -112,8 +112,9 @@ class Connect extends \Leo\ObjectBase
         }
         catch (PDOException $e)
         {
+            Leo::log('Could not connect to the database', LOG_TYPE_FATAL);
             Leo::log($e->getMessage(), LOG_TYPE_FATAL);
-            die;
+            die('Could not connect to the database');
         }
 
     }
