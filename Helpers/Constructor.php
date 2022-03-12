@@ -15,7 +15,7 @@ class Constructor
     public $type = 'select';
     /**
      *
-     * @var PDO database connection object 
+     * @var PDO database connection object
      */
     public $connection = null;
     protected $where = [];
@@ -59,7 +59,6 @@ class Constructor
     }
 
 
-
     /**
      * Resets all previously provided values
      * @return \Leo\Helpers\Constructor
@@ -96,6 +95,13 @@ class Constructor
      * [ ['user_id',2],['prod','4','>'] ] = (('user_id=2) AND (prod > 4))
      * [ ['user_id',12,'='], ['user_id',45,'<', 'OR'] ] = ( (user_id=12) OR (user_id < 45) )
      * [ ['user_id',':user_id'],['prod','4','>'] ] = (('user_id = ':user_id') AND (prod > 4))
+     * [
+     *   ['expiry_date', 'null','=','OR'],
+     *   [
+     *     ['expiry_date', 'null', '!='],
+     *     [1647113926, "UNIX_TIMESTAMP(`expiry_date`)", '<']
+     *   ]
+     * ] = ((expiry_date IS NULL) OR ((expiry_date IS NOT NULL) AND (1647113926 < UNIX_TIMESTAMP(`expiry_date`))))
      * </pre>
      * @param array $condition the where part of the statement
      * @param array $params [':placeholder' => value] any params to replace placeholders if used
@@ -104,15 +110,15 @@ class Constructor
      */
     public function where(array $condition, array $params = array(), $op = 'AND')
     {
-        if($condition) {
+        if ($condition) {
             $this->where[] = array($condition, $op, $params);
             $this->addParams($params);
         }
 
         return $this;
     }
-    
-    
+
+
     /**
      * Use to check if a result exists after running a select query
      * @return bool true if results exist otherwise false
@@ -122,7 +128,7 @@ class Constructor
         $results = $this->select(["COUNT('*')"])->run()->getFirst();
         return !!$results[0][0];
     }
-    
+
     /**
      * Use to get the count after running a select query
      * @return bool true if results exist otherwise false
@@ -134,11 +140,10 @@ class Constructor
 
     public function addParams(array $params)
     {
-        if(!empty($params))
-        {
+        if (!empty($params)) {
             $this->params = array_merge($this->getParams(), $params);
         }
-        
+
         return $this;
     }
 
@@ -151,7 +156,7 @@ class Constructor
      */
     public function order(array $columns)
     {
-       
+
         $this->order[] = $columns;
 
         return $this;
@@ -169,7 +174,7 @@ class Constructor
      */
     public function join($type, $table, array $columns)
     {
-        
+
         $this->join[] = array(strtoupper($type), $table, $columns);
 
         return $this;
@@ -183,17 +188,15 @@ class Constructor
          * Orders.OrderDate
          * FROM Orders
          * INNER JOIN Customers
-         * ON Orders.CustomerID=Customers.CustomerID; 
+         * ON Orders.CustomerID=Customers.CustomerID;
          */
-        foreach ($this->join as $array)
-        {
+        foreach ($this->join as $array) {
             $string = '';
 
             $join .= " {$array[0]} {$array[1]} ON ";
 
-            foreach ($array[2] as $field1 => $field2)
-            {
-                $string.= " AND $field1 = $field2 ";
+            foreach ($array[2] as $field1 => $field2) {
+                $string .= " AND $field1 = $field2 ";
             }
 
             $join .= trim($string, 'AND OR');
@@ -252,8 +255,8 @@ class Constructor
     public function setSql($sql)
     {
         $this->setType('raw');
-        
-        $this->sql = (string) $sql;
+
+        $this->sql = (string)$sql;
 
         return $this;
     }
@@ -289,7 +292,6 @@ class Constructor
         return $this;
     }
 
-    
 
     public function table($table)
     {
@@ -297,14 +299,14 @@ class Constructor
         return $this;
     }
 
-    
+
     /**
      * Construct the where part of the statement
      * @param array $condition the where part of the statement
      * <pre>
      * [column_name,pattern] = column LIKE pattern
      * [ ['user_id',"'%boy%'"], ['prod',"'%coke'"] ] = ((user_id LIKE '%boy%' ) AND (prod LIKE '%coke%'))
-     * like([ ['user_id',':user_id'],['prod',':productname','OR']],[':user_id'=>'%boy%',':productname'=>'%bottle'], 'AND' ) 
+     * like([ ['user_id',':user_id'],['prod',':productname','OR']],[':user_id'=>'%boy%',':productname'=>'%bottle'], 'AND' )
      * = (('user_id LIKE '%boy%') OR (prod LIKE '%bottle')) AND
      * </pre>
      * @param array $params [':placeholder' => value] any params to replace placeholders if used
@@ -313,7 +315,7 @@ class Constructor
      */
     public function like(array $condition, array $params = array(), $op = 'AND')
     {
-        
+
         $this->like[] = array($condition, $op, $params);
         $this->addParams($params);
 
@@ -329,22 +331,26 @@ class Constructor
     private function whereAll(array $conditions)
     {
         $string = '';
-        
-        foreach($conditions as $condition)
-        {
+
+        foreach ($conditions as $condition) {
+            if (is_array($condition[0])) {
+                $string .= $this->whereAll($condition);
+                continue;
+            }
+
             $op = isset($condition[3]) ? $condition[3] : 'AND';
-            
+
             $string .= $this->whereString($condition, $op);
         }
-        
+
         $whereString = trim($string, 'AND OR');
-        
+
         return "($whereString)";
-            
+
     }
-    
+
     /**
-     * 
+     *
      * @param string|array $condition
      * @param string $op operand AND OR
      * @return string
@@ -352,8 +358,7 @@ class Constructor
     private function whereString(array $condition, $op)
     {
         $string = '';
-        if (is_array($condition))
-        {
+        if (is_array($condition)) {
             $column_name = $condition[0]; //AND OR
             $operand = isset($condition[2]) ? $condition[2] : '=';
             $value = $this->getValue($condition[1], $operand);
@@ -377,14 +382,10 @@ class Constructor
      */
     protected function getValue($value, $operand = '')
     {
-        if (is_null($value) OR strtoupper($value) == 'NULL')
-        {
-            if ($operand === '!=')
-            {
+        if (is_null($value) or strtoupper($value) == 'NULL') {
+            if ($operand === '!=') {
                 return 'IS NOT NULL';
-            }
-            else
-            {
+            } else {
                 return 'IS NULL';
             }
         }
@@ -396,8 +397,7 @@ class Constructor
     {
         $string = '';
 
-        foreach ($this->order as $array)
-        {
+        foreach ($this->order as $array) {
             $order = isset($array[1]) ? $array[1] : 'ASC';
             $string .= "{$array[0]} $order,";
         }
@@ -409,9 +409,8 @@ class Constructor
     {
         $string = '';
 
-        foreach ($this->group as $group)
-        {
-            $string.= implode(',', $group).',';
+        foreach ($this->group as $group) {
+            $string .= implode(',', $group) . ',';
         }
 
         return trim($string, ',');
@@ -426,7 +425,7 @@ class Constructor
      */
     public function whereNotIn($column_name, array $fields = [], $op = 'AND')
     {
-        
+
         $this->whereNotIn[] = array($column_name, $fields, $op);
         return $this;
     }
@@ -440,7 +439,7 @@ class Constructor
      */
     public function whereIn($column_name, array $fields = [], $op = 'AND')
     {
-        
+
         $this->whereIn[] = array($column_name, $fields, $op);
         return $this;
     }
@@ -454,7 +453,7 @@ class Constructor
     public function select(array $columns = ['*'], $distinct = false)
     {
         $this->setType('select');
-        $this->select  = is_array($columns) && count($columns) ? $columns : array('*');
+        $this->select = is_array($columns) && count($columns) ? $columns : array('*');
         $this->distinct = $distinct;
         return $this;
     }
@@ -480,21 +479,15 @@ class Constructor
     public function insert(array $columns_values, array $params = [])
     {
         $this->setType('insert');
-        
-        if(!count($params))
-        {
+
+        if (!count($params)) {
             $columns_params = $this->getPdoFormat($columns_values);
             $columns_values = $columns_params['columns'];
             $this->addParams($columns_params['params']);
-        }
-        else
-        {
-            if (count($params) != count($columns_values))
-            {
+        } else {
+            if (count($params) != count($columns_values)) {
                 throw new InvalidArgumentException(lang('Parameters count does not match columns'));
-            }
-            else
-            {
+            } else {
                 $this->addParams($params);
             }
         }
@@ -544,11 +537,9 @@ class Constructor
 
     private function updateSql()
     {
-        $getColumnValues = function(array $column_value)
-        {
+        $getColumnValues = function (array $column_value) {
             $string = '';
-            foreach ($column_value as $k => $v)
-            {
+            foreach ($column_value as $k => $v) {
                 $string .= "$k = $v,";
             }
             return rtrim($string, ',');
@@ -583,14 +574,10 @@ class Constructor
     public function update(array $column_values, array $params = [])
     {
         $this->setType('update');
-        if (count($params))
-        {
-            if (count($params) != count($column_values))
-            {
+        if (count($params)) {
+            if (count($params) != count($column_values)) {
                 throw new InvalidArgumentException(lang('Params count don\'t match values'));
-            }
-            else
-            {
+            } else {
                 $this->addParams($params);
             }
         }
@@ -603,8 +590,7 @@ class Constructor
     protected function createQuery()
     {
 
-        switch ($this->type)
-        {
+        switch ($this->type) {
             case 'select':
                 $this->selectSql();
                 break;
@@ -642,74 +628,59 @@ class Constructor
     private function getWhereString()
     {
         $string = '';
-                
-        foreach ($this->where as $array)
-        {
-            
-            if (isset($array[0][0]) && is_array($array[0][0]))
-            {//multiple where conditions
-                
+
+        foreach ($this->where as $array) {
+
+            if (isset($array[0][0]) && is_array($array[0][0])) {//multiple where conditions
+
                 $s = $this->whereAll($array[0]);
                 $string .= ($string) ? " {$array[1]} $s" : "$s";
                 $string = rtrim($string, 'AND OR');
-            }
-            else
-            {
+            } else {
                 $s = $this->whereString($array[0], $array[1]);
                 $string .= ($string) ? " {$array[1]} $s" : "$s";
                 $string = rtrim($string, 'AND OR');
             }
         }
-                        
+
         //WHERE not in
         //WHERE column NOT IN (fields)
-        if (count($this->whereNotIn))
-        {
-            foreach ($this->whereNotIn as $value)
-            {
+        if (count($this->whereNotIn)) {
+            foreach ($this->whereNotIn as $value) {
                 $s = "{$value[0]} NOT IN (" . implode(',', $value[1]) . ")";
                 $string .= ($string) ? " {$value[2]} $s " : " $s {$value[2]} ";
             }
-            
+
             $string = rtrim($string, 'AND OR');
         }
 
-        if (count($this->whereIn))
-        {
-            foreach ($this->whereIn as $value)
-            {
+        if (count($this->whereIn)) {
+            foreach ($this->whereIn as $value) {
                 $s = "({$value[0]} IN (" . implode(',', $value[1]) . "))";
                 $string .= ($string) ? " {$value[2]} $s " : " $s {$value[2]} ";
             }
             $string = rtrim($string, 'AND OR');
         }
 
-        if (count($this->between))
-        {
+        if (count($this->between)) {
 
-            foreach ($this->between as $value)
-            {
+            foreach ($this->between as $value) {
                 $s = "({$value[0][0]} BETWEEN {$value[0][1]} AND {$value[0][2]})";
                 $string .= ($string) ? " {$value[1]} $s " : " $s {$value[1]} ";
             }
-            
+
             $string = rtrim($string, 'AND OR');
         }
 
 
-        if (count($this->like))
-        {
+        if (count($this->like)) {
 
-            foreach ($this->like as $value)
-            {                
-                if (is_array($value[0][0]))
-                {//multiple like conditions
+            foreach ($this->like as $value) {
+                if (is_array($value[0][0])) {//multiple like conditions
                     $s = $this->likeAll($value[0]);
                     $string .= ($string) ? " {$value[1]} $s" : "$s";
                     $string = rtrim($string, 'AND OR');
-                }
-                else
-                {
+                } else {
                     $s = " ({$value[0][0]} LIKE {$value[0][1]})";
                     $string .= ($string) ? " {$value[1]} $s " : " $s {$value[1]} ";
                 }
@@ -718,19 +689,18 @@ class Constructor
 
         return trim($string, 'AND OR');
     }
-    
+
     private function likeAll($conditions)
     {
         $string = '';
-        
-        foreach ($conditions as $value)
-        {
+
+        foreach ($conditions as $value) {
             $value[2] = isset($value[2]) ? $value[2] : '';
             $s = " ({$value[0]} LIKE {$value[1]})";
             $string .= ($string) ? " {$value[2]} $s " : " $s {$value[2]} ";
         }
-                
-        return '('.rtrim($string, 'AND OR').')';
+
+        return '(' . rtrim($string, 'AND OR') . ')';
     }
 
     /**
@@ -739,7 +709,7 @@ class Constructor
      */
     public function getConnection()
     {
-        if(is_null($this->connection)){
+        if (is_null($this->connection)) {
             $this->connection = Leo::gc('dbConnect');
         }
         return $this->connection;
@@ -752,9 +722,8 @@ class Constructor
      */
     public function beginTransaction($name = 'leo_transaction')
     {
-        if(false == $this->inTransaction())
-        {
-            leo()->getLogger()->write('Starting transaction '.$name, LOG_TYPE_DEBUG);
+        if (false == $this->inTransaction()) {
+            leo()->getLogger()->write('Starting transaction ' . $name, LOG_TYPE_DEBUG);
             $this->setTransactionName($name);
             return $this->getConnection()->getPdo()->beginTransaction();
         }
@@ -769,7 +738,7 @@ class Constructor
      */
     public function commitTransaction()
     {
-        leo()->getLogger()->write('Committing transaction '.$this->transactionName, LOG_TYPE_DEBUG);
+        leo()->getLogger()->write('Committing transaction ' . $this->transactionName, LOG_TYPE_DEBUG);
         return $this->getConnection()->getPdo()->commit();
     }
 
@@ -781,9 +750,8 @@ class Constructor
      */
     public function rollBackTransaction($name = 'leo_transaction')
     {
-        if($this->getTransactionName()  === $name)
-        {
-            leo()->getLogger()->write('Rolling back transaction '.$this->transactionName, LOG_TYPE_DEBUG);
+        if ($this->getTransactionName() === $name) {
+            leo()->getLogger()->write('Rolling back transaction ' . $this->transactionName, LOG_TYPE_DEBUG);
 
             return $this->getConnection()->getPdo()->rollBack();
         }
@@ -808,7 +776,7 @@ class Constructor
     {
         return $this->getConnection()->getPdo()->inTransaction();
     }
-    
+
     /**
      * Last insert id after an insert is performed
      * @return mixed
@@ -825,8 +793,7 @@ class Constructor
      */
     public function run($sql = '')
     {
-        if ($sql)
-        {
+        if ($sql) {
             $this->setSql($sql);
         }
 
@@ -834,7 +801,7 @@ class Constructor
 
         return $this;
     }
-    
+
     /**
      * Returns the first column value from the result set.
      * Good for results of count querys
@@ -843,18 +810,16 @@ class Constructor
     public function getFirst()
     {
 
-        if(is_array($this->getResult()))
-        {
+        if (is_array($this->getResult())) {
             $array = $this->getResult();
 
             $array = array_shift($array);
-            
-            if(!is_null($array))
-            {
-               return current($array); 
+
+            if (!is_null($array)) {
+                return current($array);
             }
         }
-        
+
         return null;
     }
 
@@ -863,8 +828,7 @@ class Constructor
      */
     private function runQuery()
     {
-        try
-        {
+        try {
             $pdo = $this->getConnection()->getPdo();//get pdo connection
 
             $sql = $this->getSql();
@@ -872,50 +836,44 @@ class Constructor
             $params = $this->getParams();
 
             $domainDbConfig = $this->getConnection()->getDatabaseSettings();
-            
+
             //optionally log db query and params based on config
-            if(isset($domainDbConfig['logQueries']))
-            {
-               leo()->getLogger()->write($sql . ( (isset($domainDbConfig['logQueryParams']) && $domainDbConfig['logQueryParams'])
-                       ? ' with params ['.  implode(',' , $params).']' : '') ) ;
+            if (isset($domainDbConfig['logQueries'])) {
+                leo()->getLogger()->write($sql . ((isset($domainDbConfig['logQueryParams']) && $domainDbConfig['logQueryParams'])
+                        ? ' with params [' . implode(',', $params) . ']' : ''));
             }
 
             $sth = $pdo->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
 
             $query_result = count($params) ? $sth->execute($params) : $sth->execute();
 
-            if ($this->getType() === 'select' OR
-                    ($this->getType() ==='raw' && 0===stripos(ltrim($sql), 'select')))
-            {//select query
+            if ($this->getType() === 'select' or
+                ($this->getType() === 'raw' && 0 === stripos(ltrim($sql), 'select'))) {//select query
 
                 $this->affectedRows = $sth->columnCount();
 
                 $query_result = $sth->fetchAll($this->getFetchMode());
-            }
-            elseif(in_array($this->getType(),['insert','update','delete']))
-            {
+            } elseif (in_array($this->getType(), ['insert', 'update', 'delete'])) {
                 $this->affectedRows = $sth->rowCount();
             }
 
             $this->setResults($query_result);
-        }
-        catch (\Exception $e)
-        {
+        } catch (\Exception $e) {
             new DBQueryError($e);
             throw $e;
         }
     }
-    
+
     public function getFetchMode()
     {
-        return $this->fetchMode ?: PDO::FETCH_ASSOC;        
+        return $this->fetchMode ?: PDO::FETCH_ASSOC;
     }
-    
+
     public function setFetchMode($fetchMode)
     {
         $this->fetchMode = $fetchMode;
     }
-    
+
     public function getParams()
     {
         return $this->params;
@@ -947,27 +905,24 @@ class Constructor
         $this->params = []; //empty params in preparation for a new query
 
         $table_columns = $model->getTableInfo()->getColumns();
-        
+
         $columns = is_array($interested_columns) ?
-                array_intersect($interested_columns, $table_columns) //extract existing columns
-                :
-                $table_columns;
+            array_intersect($interested_columns, $table_columns) //extract existing columns
+            :
+            $table_columns;
 
         $insertData = $this->getColumnsToBeInserted($model, $columns);
 
-        if ($model->getIsNewRecord())
-        {
+        if ($model->getIsNewRecord()) {
             return $this->insert($insertData['columns'], $insertData['params'])->run();
-        }
-        else
-        {
+        } else {
 
             return $model->getPrimaryColumn()
-                    ?
-                    $this->update($insertData['columns'], $insertData['params'])
-                    ->where([$model->getPrimaryColumn(),$model->getPrimaryKey()])
+                ?
+                $this->update($insertData['columns'], $insertData['params'])
+                    ->where([$model->getPrimaryColumn(), $model->getPrimaryKey()])
                     ->run()
-                    :
+                :
                 $this->updateRecordWithNoPrimaryKey($model);
         }
     }
@@ -980,7 +935,7 @@ class Constructor
      */
     private function updateRecordWithNoPrimaryKey($model)
     {
-        throw new \Exception(get_class($model). ' has no primary key');
+        throw new \Exception(get_class($model) . ' has no primary key');
     }
 
     /**
@@ -991,12 +946,10 @@ class Constructor
      */
     protected function getColumnsToBeInserted(ActiveRecord $model, array $columns)
     {
-        if ($model->getIsNewRecord())
-        {//remove primary key if included as that is auto incremented
+        if ($model->getIsNewRecord()) {//remove primary key if included as that is auto incremented
             $primary_column = $model->getTableInfo()->getPrimaryColumn();
             $primary_column_key = array_search($primary_column, $columns);
-            if ($primary_column_key !== FALSE)
-            {
+            if ($primary_column_key !== FALSE) {
                 unset($columns[$primary_column_key]);
             }
         }
@@ -1004,10 +957,8 @@ class Constructor
         $property_values = $model->getProperties($columns);
 
         //remove empty values
-        foreach ($property_values as $property => $property_value)
-        {
-            if (empty($property_value) || is_null($property_value))
-            {
+        foreach ($property_values as $property => $property_value) {
+            if (empty($property_value) || is_null($property_value)) {
                 unset($property_values[$property]);
             }
         }
@@ -1026,9 +977,9 @@ class Constructor
      * <pre>
      * array('firstname'=>'Peter', 'lastname'=>'Josh')
      * <br/>
-     * array( 
-     *  array('firstname'=>':firstname', 'lastname'=>':lastname'), 
-     *  array(':firstname'=>'Peter', ':lastname'=>'Josh') 
+     * array(
+     *  array('firstname'=>':firstname', 'lastname'=>':lastname'),
+     *  array(':firstname'=>'Peter', ':lastname'=>'Josh')
      * )
      * </pre>
      * @param array $column_values column value pairs
@@ -1038,16 +989,15 @@ class Constructor
     {
         $columns = $params = array();
 
-        foreach ($column_values as $key => $value)
-        {
+        foreach ($column_values as $key => $value) {
             $placeholder = ":$key";
-            $columns['`'.$key.'`'] = $placeholder;
+            $columns['`' . $key . '`'] = $placeholder;
             $params[$placeholder] = $value;
         }
 
         return array('params' => $params, 'columns' => $columns);
     }
-    
+
     /**
      * Did the query return any result
      * @return bool
@@ -1056,7 +1006,7 @@ class Constructor
     {
         return count($this->getResult());
     }
-    
+
     /**
      * Instantiates the model's properties with the values loaded from the database query if any
      * @param \Leo\Db\ActiveRecord $class
@@ -1065,15 +1015,14 @@ class Constructor
      */
     public function loadClass(ActiveRecord $class, $throwException = true)
     {
-        if(!$this->hasResults())
-        {
+        if (!$this->hasResults()) {
             return null;
         }
 
         return static::instantiate(current($this->getResult()), $class);
 
     }
-    
+
     /**
      * Return array of found rows are instantiated Model objects
      * @param ActiveRecord $class
@@ -1083,15 +1032,14 @@ class Constructor
     {
         $rows = [];
 
-        if(is_array($this->getResult())) {
+        if (is_array($this->getResult())) {
             foreach ($this->getResult() as $row) {
                 $rows[] = static::instantiate($row, $class);
             }
         }
-        
+
         return $rows;
     }
-
 
 
     /**
@@ -1104,22 +1052,19 @@ class Constructor
     {
         $cloned_class = clone $class;
 
-        foreach ($rows as $property => $value)
-        {
-            if(is_int($property))
-            {//when fetch mode is both
+        foreach ($rows as $property => $value) {
+            if (is_int($property)) {//when fetch mode is both
                 continue;
             }
 
-            if($cloned_class->hasProperty($property))
-            {
-                $cloned_class->{'set'.$property}($value);
+            if ($cloned_class->hasProperty($property)) {
+                $cloned_class->{'set' . $property}($value);
             }
-            
+
         }
 
         $cloned_class->setIsNewRecord(false);
-        
+
         return $cloned_class;
     }
 
@@ -1143,6 +1088,6 @@ class Constructor
         $this->transactionName = $transactionName;
         return $this;
     }
-       
-    
+
+
 }
