@@ -332,15 +332,17 @@ class Constructor
     {
         $string = '';
 
-        foreach ($conditions as $condition) {
-            if (is_array($condition[0])) {
+        foreach($conditions as $condition)
+        {
+            if(is_array($condition[0])){
                 $string .= $this->whereAll($condition);
                 continue;
             }
 
             $op = isset($condition[3]) ? $condition[3] : 'AND';
 
-            $string .= $this->whereString($condition, $op);
+            $string .= " $op ". $this->whereString($condition,$op);
+
         }
 
         $whereString = trim($string, 'AND OR');
@@ -350,25 +352,18 @@ class Constructor
     }
 
     /**
-     *
-     * @param string|array $condition
-     * @param string $op operand AND OR
+     * @param array $condition [5,2] = 5=2, [5,2,'>'] = 5>2
      * @return string
      */
-    private function whereString(array $condition, $op)
+    private function whereString(array $condition)
     {
-        $string = '';
-        if (is_array($condition)) {
-            $column_name = $condition[0]; //AND OR
-            $operand = isset($condition[2]) ? $condition[2] : '=';
-            $value = $this->getValue($condition[1], $operand);
-            /**
-             * The first where should have AND OR in front not before
-             */
-            $string = " ($column_name $value) $op ";
-        }
-
-        return $string;
+        $column_name = $condition[0];
+        $operand = isset($condition[2]) ? $condition[2] : '=';
+        $value = $this->getValue($condition[1], $operand);
+        /**
+         * The first where should have AND OR in front not before
+         */
+        return " ($column_name $value) ";
     }
 
     /**
@@ -629,24 +624,25 @@ class Constructor
     {
         $string = '';
 
-        foreach ($this->where as $array) {
-
-            if (isset($array[0][0]) && is_array($array[0][0])) {//multiple where conditions
-
+        foreach ($this->where as $array)
+        {
+            if (isset($array[0][0]) && is_array($array[0][0]))
+            {//multiple where conditions
                 $s = $this->whereAll($array[0]);
-                $string .= ($string) ? " {$array[1]} $s" : "$s";
-                $string = rtrim($string, 'AND OR');
-            } else {
-                $s = $this->whereString($array[0], $array[1]);
-                $string .= ($string) ? " {$array[1]} $s" : "$s";
-                $string = rtrim($string, 'AND OR');
             }
+            else
+            {
+                $s = $this->whereString($array[0], $array[1]);
+            }
+            $string .= ($string) ? " {$array[1]} $s" : "$s";
         }
 
         //WHERE not in
         //WHERE column NOT IN (fields)
-        if (count($this->whereNotIn)) {
-            foreach ($this->whereNotIn as $value) {
+        if (count($this->whereNotIn))
+        {
+            foreach ($this->whereNotIn as $value)
+            {
                 $s = "{$value[0]} NOT IN (" . implode(',', $value[1]) . ")";
                 $string .= ($string) ? " {$value[2]} $s " : " $s {$value[2]} ";
             }
@@ -654,17 +650,21 @@ class Constructor
             $string = rtrim($string, 'AND OR');
         }
 
-        if (count($this->whereIn)) {
-            foreach ($this->whereIn as $value) {
+        if (count($this->whereIn))
+        {
+            foreach ($this->whereIn as $value)
+            {
                 $s = "({$value[0]} IN (" . implode(',', $value[1]) . "))";
                 $string .= ($string) ? " {$value[2]} $s " : " $s {$value[2]} ";
             }
             $string = rtrim($string, 'AND OR');
         }
 
-        if (count($this->between)) {
+        if (count($this->between))
+        {
 
-            foreach ($this->between as $value) {
+            foreach ($this->between as $value)
+            {
                 $s = "({$value[0][0]} BETWEEN {$value[0][1]} AND {$value[0][2]})";
                 $string .= ($string) ? " {$value[1]} $s " : " $s {$value[1]} ";
             }
@@ -673,14 +673,19 @@ class Constructor
         }
 
 
-        if (count($this->like)) {
+        if (count($this->like))
+        {
 
-            foreach ($this->like as $value) {
-                if (is_array($value[0][0])) {//multiple like conditions
+            foreach ($this->like as $value)
+            {
+                if (is_array($value[0][0]))
+                {//multiple like conditions
                     $s = $this->likeAll($value[0]);
                     $string .= ($string) ? " {$value[1]} $s" : "$s";
                     $string = rtrim($string, 'AND OR');
-                } else {
+                }
+                else
+                {
                     $s = " ({$value[0][0]} LIKE {$value[0][1]})";
                     $string .= ($string) ? " {$value[1]} $s " : " $s {$value[1]} ";
                 }

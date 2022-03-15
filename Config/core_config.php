@@ -71,6 +71,9 @@ $base = array(
         ],
         'domainManager' =>[
             '_class_' => 'Leo\Helpers\DomainManager',
+        ],
+        'notifyCollection' => [
+            '_class_'=> 'Leo\Collections\NotifyCollection'
         ]
     )
 );

@@ -293,15 +293,16 @@ class ActiveRecord extends MainModel
      * @param integer $id primary key of model
      * @param array $select_columns columns you want selected
      * @return static object with keys prepopulated with db values or null if not found
+     * @throws \Exception
      */
-    public static function load($id, array $select_columns = null)
+    public static function load(int $id, array $select_columns = null)
     {
         /**
          * @var $tableInfo TableInfo
          */
         $tableInfo = Leo::lc('tableInfo', array('name' => array(static::getTableName())));
         return leo()->getDb()->table(static::getTableName())
-                ->where([$tableInfo->getPrimaryColumn(),intval($id)])
+                ->where([$tableInfo->getPrimaryColumn(),$id])
                 ->select( $select_columns?:$tableInfo->getPrefixedColumns())->run()->loadClass(new static());
                         
     }

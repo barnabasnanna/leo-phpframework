@@ -1,9 +1,11 @@
 <?php
 namespace Leo\Routing;
 
+use Symfony\Component\Config\Definition\Exception\Exception;
+
 /**
  * Dependency injector for routing.
- * 
+ *
  * Passes the right argument to the action method
  *
  * @author Barnabas
@@ -18,11 +20,11 @@ class RouteDi
         $paramNames = [];
         //make sure that minimum required parameters are provided
         $num_of_required_params = $RM->getNumberOfRequiredParameters();
-        
+
         if ($num_of_required_params > count($user_parameters))
         {
             throw new \Exception('Not enough required parameters provided');
-            
+
         }elseif(count($route_expected_parameters) > count($user_parameters)){
             throw new \Exception('Not enough expected parameters are provided');
         }
@@ -31,8 +33,10 @@ class RouteDi
 
         foreach ($methodParams as $RP)
         {
-            if($RP->getClass()){//if class instantiate
-                $paramNames[$RP->getName()] = $RP->getClass()->newInstance();
+            $type = (string)$RP->getType();
+
+            if($RP->getType() && !$RP->getType()->isBuiltin()){//if class instantiate
+                $paramNames[$RP->getName()] = static::getClass($RP);
             }else{
                 $paramNames[$RP->getName()] = self::getValue($RP, $user_parameters);
             }
@@ -41,12 +45,20 @@ class RouteDi
         return $paramNames;
     }
 
+    private static function getClass($RP){
+        $className = (string) $RP->getType();
+        if(!class_exists($className)){
+            throw new Exception('Class not found');
+        }
+        return new $className;
+    }
+
     private static function getValue(\ReflectionParameter $RP, array $user_param)
     {
         $value = null;
-        
+
         $paramName = $RP->getName();
-        
+
         //if the param doesnt exist in provided user params
         if (!array_key_exists($paramName, $user_param))
         {
@@ -55,13 +67,13 @@ class RouteDi
             {
                 $value = $RP->getDefaultValue();
             }
-            //if it is required, and default value not provided throw Exception            
+            //if it is required, and default value not provided throw Exception
             elseif (!$RP->isOptional())
             {
                 throw new \Exception(
-                sprintf('$%s is a required parameter for method %s::%s and no default value provided.',
+                    sprintf('$%s is a required parameter for method %s::%s and no default value provided.',
                         $paramName,
-                        $RP->getDeclaringClass()->getName(), 
+                        $RP->getDeclaringClass()->getName(),
                         $RP->getDeclaringFunction()->getName()));
             }
         }
@@ -86,7 +98,7 @@ class RouteDi
      * @param mixed $passed_value the value to be assigned
      * @return boolean
      */
-    protected static function compareTypes($method_parameter, $passed_value)
+    protected static function compareTypes($method_parameter, $passed_value): bool
     {
         $method_parameter_type = self::getVariableType($method_parameter);
         $passed_value_type = self::getVariableType($passed_value);
@@ -95,18 +107,18 @@ class RouteDi
         return $method_parameter_type==='any' OR $method_parameter_type === $passed_value_type;
     }
 
-    protected static function getVariableType($variable)
+    protected static function getVariableType($variable): string
     {
         $type = null;
-        
+
         if ($variable instanceof \ReflectionParameter)
         {
-            $class = $variable->getClass();
-            if ($class)
+            $isAClass = $variable->getType() && !$variable->getType()->isBuiltin();
+            if ($isAClass)
             {
-                $type = 'object'; 
+                return 'object';
             }
-            elseif ($variable->isArray())
+            elseif ('array' === (string) $variable->getType())
             {
                 return 'array';
             }
@@ -122,8 +134,4 @@ class RouteDi
 
         return $type;
     }
-    
-    
-    
-
 }
