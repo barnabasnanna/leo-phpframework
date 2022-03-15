@@ -752,11 +752,6 @@ class Validator
 
         $property_value_confirm = $this->getObject()->getPropertyValue($property.'_confirm');
 
-        if(empty($property_value_confirm))
-        {
-            throw new Exception('Confirmation property value is empty');
-        }
-
         if($property_value_confirm!=$property_value)
         {
 

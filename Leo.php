@@ -244,29 +244,25 @@ class Leo extends ObjectBase
     /**
      * Reloads a component by first flushing it if it already exists in component cache
      * @param string $name component name
-     * @param array $properties component name
+     * @param array $properties used to initiate created object properties
      * @return object instantiated component class
      * @throws Exception
      */
-    public static function reloadComponent($name, array $properties = null)
+    public static function reloadComponent(string $name, array $properties = []): object
     {
-        if (is_string($name)) {
             self::flushComponents($name);
-
             return self::getComponent($name, $properties);
-        }
-
     }
 
     /**
      * Alias for reloadComponent method.
      * <p>Reloads a component by first flushing it if it already exists in component cache</p>
      * @param string $name component name
-     * @param array $properties component name
+     * @param array $properties used to initiate created object properties
      * @return object instantiated component class
-     * @throws Exception
+     * @throws \Exception
      */
-    public static function rc($name, array $properties = null)
+    public static function rc(string $name, array $properties = []): object
     {
         return self::reloadComponent($name, $properties);
     }
@@ -276,7 +272,7 @@ class Leo extends ObjectBase
      * component cache
      * @param string $name component name you want flushed from component cache
      */
-    public static function flushComponents($name = '')
+    public static function flushComponents(string $name = '')
     {
         if ($name) {
             if (isset(self::$components[$name])) {

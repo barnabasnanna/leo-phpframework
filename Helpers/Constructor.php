@@ -125,7 +125,7 @@ class Constructor
      */
     public function exists()
     {
-        $results = $this->select(["COUNT('*')"])->run()->getFirst();
+        $results = $this->select(["COUNT('*')"])->limit([1])->run()->getFirst();
         return !!$results[0][0];
     }
 
