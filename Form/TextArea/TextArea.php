@@ -33,7 +33,7 @@ class TextArea extends Input
      * @param bool $required
      * @return $this
      */
-    public function setRequired($required)
+    public function setRequired($required=true)
     {
         if($required)
         {

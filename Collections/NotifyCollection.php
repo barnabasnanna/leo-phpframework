@@ -58,6 +58,7 @@ class NotifyCollection extends myIterator
         $notifications_obj->setType($type);
 
         $notify = new Notify($type, $message);
+        $notify->setClass('alert-'.$this->getTypeClass());
         $notifications_obj->addItem($notify);
         leo()->getSession()->set($this->getKey(), $notifications_obj);
     }

@@ -191,17 +191,15 @@ class Leo extends ObjectBase
             throw new \Exception('$component_name must be a string');
         }
 
-        $instantiated_components = self::getComponents();
-
-        if (!isset($instantiated_components[$component_name])) {//if not loaded already
+        if (!isset(self::$components[$component_name])) {//if not loaded already
             if ($component_name != 'log') {//to prevent continuous cyclic reference
                 self::log('Loading component with name '.$component_name.' and storing in static storage.');
             }
 
-            $component_config= self::getConfig($component_name, self::COMPONENTS);
+            $component_config = self::getConfig($component_name, self::COMPONENTS, $throwException);
 
-            if ($component_config) {//component is defined in config, load and store
-
+            if ($component_config) {
+                //component is defined in config, load and store
                 self::addComponent(
                     $component_name,
                     self::loadComponent
@@ -209,15 +207,13 @@ class Leo extends ObjectBase
                         $component_config, $properties
                     )
                 );
-            } elseif ($throwException) {
-                new MissingConfigException($component_name . ' not found in application config', $component_name);
-            } else {
+            }else {
                 return false;
             }
         }
-
         return self::$components[$component_name];
     }
+
 
     /**
      * Loads a configurable component. Override any default properties if user properties are provided

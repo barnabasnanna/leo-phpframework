@@ -1,4 +1,5 @@
 <?php
+
 namespace Leo\Di;
 
 /**
@@ -17,8 +18,10 @@ class Di
     public static $instance;
     public $useNull = false;
     private $_container = array();
+    private $configProperties = [];
 
-    public function __construct(){
+    public function __construct()
+    {
     }
 
     /**
@@ -27,8 +30,7 @@ class Di
      */
     public static function ini()
     {
-        if (is_null(self::$instance))
-        {
+        if (is_null(self::$instance)) {
             self::$instance = new static();
         }
 
@@ -67,31 +69,21 @@ class Di
     {
         $c_array = array();
 
-        if (!$value)
-        {//if value not given eg when key is an object
+        if (!$value) {//if value not given eg when key is an object
             $value = $key;
         }
 
-        if (is_object($value))
-        {
+        if (is_object($value)) {
             $c_array = $value;
-        }
-        elseif (is_string($value))
-        {
-            if ($this->checkNS($value))
-            {
+        } elseif (is_string($value)) {
+            if ($this->checkNS($value)) {
                 $c_array['_class_'] = $value;
             }
-        }
-        elseif (is_array($value) && isset($value['_class_']))
-        {//if it is a configuration array
-            if ($this->checkNS($value['_class_']))
-            {
+        } elseif (is_array($value) && isset($value['_class_'])) {//if it is a configuration array
+            if ($this->checkNS($value['_class_'])) {
                 $c_array = $value;
             }
-        }
-        else
-        {
+        } else {
             throw new \InvalidArgumentException('Invalid parameters passed');
         }
 
@@ -106,12 +98,9 @@ class Di
      */
     private function getKey($key)
     {
-        if(is_string($key))
-        {
+        if (is_string($key)) {
             return $key;
-        }
-        elseif(is_object($key))
-        {
+        } elseif (is_object($key)) {
             return get_called_class($key);
         }
     }
@@ -121,38 +110,30 @@ class Di
      * First checks if the $key is an associated index in container and returns class instance from value.
      * If not, it checks if any of the values are object instances of $key
      */
-    public function get($key, $throwException=false)
+    public function get($key, $throwException = false)
     {
         $container = $this->getContainer();
 
         $key = $this->getKey($key);
 
-        if (isset($container[$key]))
-        {
+        if (isset($container[$key])) {
             $object = $container[$key];
 
-            if (!is_object($object))
-            {
+            if (!is_object($object)) {
                 $object = $this->getClass($container[$key]);
 
-                if ($this->getCache())
-                {//cache the instantiated object
+                if ($this->getCache()) {//cache the instantiated object
                     $this->add($key, $object);
                 }
             }
 
             return $object;
-        }
-        elseif($object = $this->findClassInstance($key))
-        {
+        } elseif ($object = $this->findClassInstance($key)) {
             return $object;
 
-        }
-        elseif($throwException)
-        {
+        } elseif ($throwException) {
             throw new \Exception($key . ' not added to container.');
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -164,15 +145,12 @@ class Di
      */
     protected function findClassInstance($class_name)
     {
-        foreach($this->getContainer() as $key => $value)
-        {
-            if (is_array($value) && isset($value['_class_']))
-            {
+        foreach ($this->getContainer() as $key => $value) {
+            if (is_array($value) && isset($value['_class_'])) {
                 $value = $this->getClass($value);
             }
 
-            if(is_object($value) && \get_called_class($value) == \get_called_class($class_name))
-            {
+            if (is_object($value) && \get_called_class($value) == \get_called_class($class_name)) {
                 return $value;
             }
         }
@@ -202,43 +180,35 @@ class Di
         $config = $configArray;
 
 
-        if(is_string($configArray))
-        {
+        if (is_string($configArray)) {
             $config = [];
             $config['_class_'] = $configArray;
-        }
-        elseif(isset($config['_class_']) && is_object($config['_class_']))
-        {//if already an object
+        } elseif (isset($config['_class_']) && is_object($config['_class_'])) {//if already an object
             return $config['_class_'];
         }
 
         $RC = new \ReflectionClass($config['_class_']);
 
-        if($RC instanceof \ReflectionClass)
-        {
-            if ($RC->isInstantiable())
-            {
+        if ($RC instanceof \ReflectionClass) {
+            if ($RC->isInstantiable()) {
+
                 unset($config['_class_']);//remove the _class_ index
 
-                $object = $this->instantiate($RC);
+                $object = $this->instantiate($RC, $config);
 
                 $this->setProperties($config, $object);
-            }
-            else
-            {
+            } else {
                 throw new \ReflectionException($RC->getClass()->getName() . ' can not be instantiated.');
             }
 
-        }
-        else
-        {
+        } else {
             throw new \ReflectionException($config['_class_'] . ' not found.');
         }
 
         return $object;
     }
 
-     /**
+    /**
      * <p>Sets the properties of an instantiated class.
      * Array key and values are used as property value pairs.</p>
      * If a property is an configurable array with a _class_ key, that is instantiated as well
@@ -254,38 +224,26 @@ class Di
      * @param array $config class properties
      * @param object $object object you want their properties modified
      * @throws \Exception if a property doesn't belong to class
-      * @throws \BadMethodCallException if object not provided
+     * @throws \BadMethodCallException if object not provided
      */
     public function setProperties(array $config, $object)
     {
-        if(!is_object($object))
-        {
+        if (!is_object($object)) {
             throw new \BadMethodCallException('Second argument must be an object');
         }
 
-        foreach ($config as $property_name => $value)
-        {
-            if (property_exists($object, $property_name))
-            {
-                if (is_array($value) && isset($value['_class_']))
-                {
+        foreach ($config as $property_name => $value) {
+            if (property_exists($object, $property_name)) {
+                if (is_array($value) && isset($value['_class_'])) {
                     $object->{$property_name} = $this->getClass($value);
-                }
-                else
-                {
-                    if(method_exists($object, 'set'. clean($property_name)))
-                    {//use setter method if one exists
+                } else {
+                    if (method_exists($object, 'set' . clean($property_name))) {//use setter method if one exists
                         call_user_func_array(array($object, 'set' . clean($property_name)), $this->ct($value));
+                    } else {
+                        $object->{$property_name} = $value;
                     }
-                     else
-                    {
-                         $object->{$property_name} = $value;
-                    }
-
                 }
-            }
-            else
-            {
+            } else {
                 throw new \Exception($property_name . lang(' is not a property of ') . get_class($object));
             }
         }
@@ -294,71 +252,91 @@ class Di
     /**
      * Instantiating a new class.
      * @param \ReflectionClass $RC
-     * @return type
+     * @return object
      */
-    private function instantiate(\ReflectionClass $RC)
+    private function instantiate(\ReflectionClass $RC, $properties = [])
     {
-        $params = $this->getMethodParams($RC->getConstructor());
-
+        $params = $this->getMethodParams($RC->getConstructor(), $properties);
         return $RC->newInstanceArgs($params);
     }
 
     /**
-     * Returns the relection method parameters
+     * Returns the relection method parameter resolved values
      * @param \ReflectionMethod $RM
-     * @return array method parameters
+     * @return array method parameter values
      */
-    public function getMethodParams(\ReflectionMethod $RM=null)
+    public function getMethodParams(\ReflectionMethod $RM = null, array $properties = [])
     {
         $params = [];
-        if($RM instanceof \ReflectionMethod)
-        {
-            foreach ($RM->getParameters() as $RP)
-            {
-                $params[] = $this->fetchParamValue($RP);
+        if ($RM instanceof \ReflectionMethod) {
+            foreach ($RM->getParameters() as $RP) {
+                $params[] = $this->fetchParamValue($RP, $properties);
             }
         }
 
         return $params;
     }
 
-    private function fetchParamValue(\ReflectionParameter $RP)
+    /**
+     * Is the parameter a class
+     * @param \ReflectionParameter $RP
+     * @return bool
+     */
+    private function isClass(\ReflectionParameter $RP)
+    {
+        $type = (string) $RP->getType();
+        return $type && !$RP->getType()->isBuiltin();
+    }
+
+    /**
+     * Is the RP an array
+     * @param \Leo\Di\ReflectionParameter $reflectionParameter
+     * @return bool
+     */
+    function isArray(\ReflectionParameter $reflectionParameter): bool
+    {
+        $reflectionType = $reflectionParameter->getType();
+
+        if (!$reflectionType) return false;
+
+        $types = $reflectionType instanceof ReflectionUnionType
+            ? $reflectionType->getTypes()
+            : [$reflectionType];
+
+        return in_array('array', array_map(fn(ReflectionNamedType $t) => $t->getName(), $types));
+    }
+
+    /**
+     * Given a Reflection Parameter, get the resolved value.
+     * Checks if a parameter is supplied in config array, else try resolve
+     * @param \ReflectionParameter $RP
+     * @param array $properties
+     * @return mixed
+     * @throws \Exception
+     */
+    private function fetchParamValue(\ReflectionParameter $RP, array $properties = [])
     {
         $value = null;
 
-        if ($RP->isOptional())
+        if (isset($properties[$RP->getName()]))
         {
-            $value = $this->fetchParamDefaultValue($RP);
+            $value = $properties[$RP->getName()];
         }
-        elseif (($class = $RP->getClass()))
-        {//check if class is already stored in container
-            $value = $this->get($class->getName()) ?:$class->newInstance();
-
+        elseif ($RP->isOptional())
+        {//return default value of parameter
+            $value = $RP->isDefaultValueAvailable() ? $RP->getDefaultValue() : null;
         }
-        elseif ($RP->isArray())
+        elseif ($this->isClass($RP))
+        {//if paramater a class, is already stored in container else instantiate
+            $className = (string)$RP->getType();
+            $value = $this->get($className) ?: new $className;
+        }
+        elseif ($this->isArray($RP))
         {
-            $value = array();
+            $value = [];
         }
-        else
-        {
-            $value = null;
-        }
-
         return $value;
     }
-
-    private function fetchParamDefaultValue(\ReflectionParameter $RP)
-    {
-        $defaultValue = null;
-
-        if ($RP->isDefaultValueAvailable())
-        {
-            $defaultValue = $RP->getDefaultValue();
-        }
-
-        return $defaultValue;
-    }
-
 
     /**
      * Should instantiated objects be cached
@@ -375,7 +353,7 @@ class Di
      */
     public function setCache($cache_objects)
     {
-        $this->cache = (bool) $cache_objects;
+        $this->cache = (bool)$cache_objects;
     }
 
     /**
@@ -385,12 +363,11 @@ class Di
      */
     private function ct($var)
     {
-        if(is_object($var))
-        {
-           $var = array($var);
+        if (is_object($var)) {
+            $var = array($var);
         }
 
-        return (array) $var;
+        return (array)$var;
     }
 
 }

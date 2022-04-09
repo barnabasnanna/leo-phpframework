@@ -29,15 +29,16 @@ abstract class MainModel extends ObjectBase
      */
     public function validate()
     {
+        if ($this->beforeValidate()) {
 
-        if ($this->beforeValidate())
-        {
             $this->gv()->run();
+
+            $this->afterValidate();
+
+            return !$this->hasErrors();
         }
 
-        $this->afterValidate();
-
-        return !$this->hasErrors();
+        return false;
     }
 
     protected function beforeValidate()

@@ -83,7 +83,8 @@ class Select extends ObjectBase
 
     public function getDropDownOptions()
     {
-        $options = '<option value="">' . lang('--Select--') . '</option>';
+        $options='';
+        $request = leo()->getRequest();
 
         foreach ($this->dropDownOptions as $key => $value)
         {
@@ -92,7 +93,7 @@ class Select extends ObjectBase
             //matches
             if($this->getNameMatchingPattern() && preg_match($this->getNameMatchingPattern(),$this->getName(),$matches))
             {
-                $_requestValue = leo()->getRequest()->getParam($matches[1]);
+                $_requestValue =$request->getParam($matches[1]);
 
                 if(is_array($_requestValue) && isset($_requestValue[$matches[2]]))
                 {
@@ -225,7 +226,7 @@ class Select extends ObjectBase
      * @param bool $required
      * @return $this
      */
-    public function setRequired($required)
+    public function setRequired(bool $required=true)
     {
         if($required)
         {

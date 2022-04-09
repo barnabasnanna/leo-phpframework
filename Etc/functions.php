@@ -52,24 +52,25 @@ function clean($str = '', $lowerCase = false, $replace='')
 }
 
 /**
- * Create a url
+ * Create a url or href link
  * @param string $text
  * @param array $href_params
  * @param array $attributes
  * @return string
  */
-function Url($text='', array $href_params = [], array $attributes = [])
+function Url(string $text='', array $href_params = [], array $attributes = []): string
 {
     $options = '';
     foreach($attributes as $attribute => $value)
     {
         $options.= " $attribute = '$value' ";
     }
-    
+
     $href = array_shift($href_params);
     $params = http_build_query($href_params);
-    
-    return '<a href="'.$href.( count($href_params) ? '?'. $params : '') .'"' .$options.'>'.$text.'</a>';
+    $link = $href.( count($href_params) ? '?'. $params : '') .'"' .$options;
+
+    return $text ? '<a href="'.$link.'>'.$text.'</a>' : $link;
 }
 
 /**

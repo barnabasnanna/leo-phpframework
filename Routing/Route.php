@@ -411,7 +411,7 @@ class Route extends ObjectBase
         
         $mFolder = file_exists($appModuleBaseFolder) ? $appModuleBaseFolder : $leoModuleBaseFolder;
         
-        return !$module ? $mFolder : $mFolder . DS . $module;
+        return !$module ? $mFolder : $mFolder . DS . ucfirst($module);
         
     }
 
