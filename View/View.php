@@ -102,7 +102,8 @@ class View
     }
 
     /**
-     * Get the theme folder, Themes, in base path. Base path can be in Package
+     * Get the theme folder
+     * All Themes should be in Theme folder. Packages should move their Theme files to APP_PATH/Theme folder
      * @param string $base
      * @return null|string
      * @throws \Exception
@@ -113,7 +114,8 @@ class View
 
         if($themeName = \leo()->getTheme()->getName())
         {//theme in config
-            $themeFolder = APP_PATH.DS.($base? $base.DS : '') .'Themes'.DS.$themeName;
+//            $themeFolder = APP_PATH.DS.($base? $base.DS : '') .'Themes'.DS.$themeName;
+            $themeFolder = APP_PATH.DS.'Themes'.DS.$themeName;
         }
 
         return $themeFolder;
