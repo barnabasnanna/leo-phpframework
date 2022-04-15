@@ -71,7 +71,7 @@ Class Base extends ObjectBase
             }
             elseif (is_array($config))
             {//if array config
-                $_config = array_merge_recursive($config, $_config);
+                $_config = array_replace_recursive($config, $_config);
             }
             
         }

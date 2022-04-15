@@ -255,7 +255,7 @@ class Leo extends ObjectBase
      * <p>Reloads a component by first flushing it if it already exists in component cache</p>
      * @param string $name component name
      * @param array $properties used to initiate created object properties
-     * @return object instantiated component class
+     * @return mixed instantiated component class
      * @throws \Exception
      */
     public static function rc(string $name, array $properties = []): object
@@ -618,7 +618,7 @@ class Leo extends ObjectBase
      */
     public function getEventManager()
     {
-        return self::getComponent('eventManager');
+        return self::rc('eventManager');
     }
 
     /**

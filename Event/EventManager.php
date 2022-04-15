@@ -16,9 +16,15 @@ class EventManager extends ObjectBase
 
     /**
      * Event handlers
-     * @var array 
+     * @var array
      */
     private static $eventHandlers = [];
+
+    /**
+     * Get errors generated when dispatching event
+     * @var array
+     */
+    public static $errors = [];
 
     /**
      * @var bool Throw exception if a one occurs when handling event
@@ -39,20 +45,18 @@ class EventManager extends ObjectBase
      * @param string $event_name event name
      * @param array $event_params parameters passed to event handlers
      * @param string $targetPackageNameSpace target package namespace
-     * @return mixed 
+     * @return mixed
      */
     public function dispatch($event_name, array $event_params = [], $targetPackageNameSpace = null)
     {
-            $event = new Event();
-            $event->setEventName(self::cleanName($event_name));
-            $event->setEventParams($event_params);
-            ob_start();
-            self::runEvent($event, $targetPackageNameSpace);
-            return ob_get_clean();
+        $event = new Event();
+        $event->setEventName(self::cleanName($event_name));
+        $event->setEventParams($event_params);
+        self::runEvent($event, $targetPackageNameSpace);
     }
 
     /**
-     * Dispatch an event. The results are stored in the result property of the eent
+     * Dispatch an event. The results are stored in the result property of the event
      * @param Event $event
      * @param null $targetPackageNameSpace
      * @throws \Exception
@@ -99,8 +103,8 @@ class EventManager extends ObjectBase
         }
 
     }
-    
-    
+
+
     /**
      * Checks if the handler is allowed to handle event for it may have been disabled.
      * If a targetPackageNamespace is given, only run the handler that matches
@@ -111,42 +115,44 @@ class EventManager extends ObjectBase
      */
     private static function inspectHandler(array $handler_config, $targetPackageNameSpace = null)
     {
-        
+
         if(!isset($handler_config['_class_']))
         {
             return false;
         }
-        
+
         if(!is_null($targetPackageNameSpace) && $handler_config['_class_'] !== $targetPackageNameSpace)
         {
             return false;
         }
-        
+
         if(isset($handler_config['_disabled_']))
         {
             if(!$handler_config['_disabled_'])
             {
                 return false;
             }
-            
+
             unset($handler_config['_disabled_']);//unset as most likely not a property of _class_ to be autoloaded
         }
-        
+
         //enable toggling of the exception handling per event
         if(isset($handler_config['_throwException_'])){
             self::setThrowException(boolval($handler_config['_throwException_']));
+        }else{
+            self::setThrowException();
         }
-                
+
         return $handler_config;
-        
+
     }
 
     /**
      * Run all the handlers attached to a event
      * @param \Leo\Event\Event $event
-     * @param string $targetPackageNameSpace full namespace path of target class
+     * @param string|null $targetPackageNameSpace full namespace path of target class
      */
-    private static function runEvent(Event $event, $targetPackageNameSpace=null)
+    private static function runEvent(Event $event, string $targetPackageNameSpace=null)
     {
 
         try
@@ -170,8 +176,13 @@ class EventManager extends ObjectBase
                         if ($eventHandler instanceof I_EventHandler)
                         {
                             leo()->getLogger()->write('Passing event to handler ' . get_class($eventHandler), LOG_TYPE_DEBUG);
-                            $eventHandler->setEvent(clone $event);
+                            $clonedEvent = clone $event; //pass a cloned event so handlers cant manipulate object
+                            $eventHandler->setEvent($clonedEvent);
                             $eventHandler->run();
+                            if($clonedEvent->getResult()) {//has error
+                                //copy any errors from cloned Event to the main event thrown
+                                $event->addResult('_dispatch_errors_', $clonedEvent->getResult());
+                            }
                         }
                     }
                 }
@@ -197,26 +208,24 @@ class EventManager extends ObjectBase
      * @param string $event_name
      * @param array $eventHandlerConfig
      */
-    public function addEventHandler($event_name, array $eventHandlerConfig)
+    public function addEventHandler(string $event_name, array $eventHandlerConfig)
     {
-
-        $event_handler = self::getEventHandlers();
 
         if(isset($eventHandlerConfig['_class_']))
         {
-            $event_handler[$event_name][] = $eventHandlerConfig;
+            self::$eventHandlers[$event_name][] = $eventHandlerConfig;
         }
-        
+
     }
 
     /**
      * Array map matching event names to handling classes
      * <pre>
      *  'leo_collect_user_profile_attributes' => array(
-                array('_class_' => "\app\Packages\Package1\Components\EventHandlers\EventHandler"),
-                
+    array('_class_' => "\app\Packages\Package1\Components\EventHandlers\EventHandler"),
+
      *          array('_class_' => "\app\Packages\Package2\Components\EventHandlers\EventHandler")
-            ),
+    ),
      * </pre>
      * @return array event handler configuration
      */
@@ -233,11 +242,9 @@ class EventManager extends ObjectBase
     /**
      * Should an exception be thrown during event handling
      * @param bool $throwException
-     * @return $this
      */
-    public function setThrowException($throwException=true){
+    public static function setThrowException(bool $throwException=true){
         self::$throwException = $throwException;
-        return $this;
     }
 
 }

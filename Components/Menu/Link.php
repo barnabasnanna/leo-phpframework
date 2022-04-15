@@ -20,6 +20,7 @@ class Link extends ObjectBase
 
     protected $wrap = 'li';
     protected $wrap_options =[];
+    protected $url_options =[];
     protected $url = [];
     protected $text;
     protected $visibility = true;
@@ -27,6 +28,7 @@ class Link extends ObjectBase
     protected $text_wrapper_options=[];
     protected $icon;
     protected $sub_menu;
+    protected $active = false;
 
     /**
      * @return mixed
@@ -63,7 +65,7 @@ class Link extends ObjectBase
         $this->text_wrapper = $text_wrapper;
         return $this;
     }
-    
+
     public function getVisibility()
     {
         return $this->visibility;
@@ -75,7 +77,7 @@ class Link extends ObjectBase
         return $this;
     }
 
-            
+
     public function getWrap()
     {
         return $this->wrap;
@@ -84,11 +86,11 @@ class Link extends ObjectBase
     public function __toString()
     {
         return sprintf('<%s %s>%s%s</%s>',
-                $this->getWrap(),
-                $this->getWrapOptions(),
-                $this->getLink(),
-                $this->getSubMenu(),
-                $this->getWrap());
+            $this->getWrap(),
+            $this->getWrapOptions(),
+            $this->getLink(),
+            $this->getSubMenu(),
+            $this->getWrap());
     }
 
     /**
@@ -120,17 +122,29 @@ class Link extends ObjectBase
     {
         return $this->text_wrapper ? sprintf('</%s>',$this->text_wrapper) : '';
     }
-    
-    
+
+    public function getUrlOptions(){
+        $options = '';
+
+        foreach($this->url_options as $attr=>$value)
+        {
+            $options.= " $attr = '$value'";
+        }
+
+        return $options;
+    }
+
+
     public function getLink()
     {
-        return sprintf('<a href="%s">%s%s%s%s</a>',
-                $this->getHref(),
-                $this->getIconText(),
-                $this->getOpenTextWrapper(),
-                $this->text,
-                $this->getClosingTextWrapper()
-                );
+        return sprintf('<a %s href="%s">%s%s%s%s</a>',
+            $this->getUrlOptions(),
+            $this->getHref(),
+            $this->getIconText(),
+            $this->getOpenTextWrapper(),
+            $this->text,
+            $this->getClosingTextWrapper()
+        );
     }
 
     protected function getIconText()
@@ -138,8 +152,8 @@ class Link extends ObjectBase
         return $this->icon ? '<i class="'.$this->icon.'"></i>' : '';
     }
 
-    
-    
+
+
     protected function getHref()
     {
         if(!is_array($this->url)) return '';
@@ -147,43 +161,48 @@ class Link extends ObjectBase
         return $href.( !empty($this->url) ? '?'. http_build_query($this->url) : '');
 
     }
-    
+
+    protected function isActive(){
+        return $this->active;
+    }
+
     public function setUrl(array $url)
     {
         $this->url = $url;
         $href = current($this->url);
-        if(trim($href,'/') == leo()->getRequest()->getUrl())
+        if(trim($href,'/') == leo()->getRequest()->getUrl() || $this->isActive())
         {
-            isset($this->wrap_options['class']) ? 
-                $this->wrap_options['class'] .= ' active' :  
+            isset($this->wrap_options['class']) ?
+                $this->wrap_options['class'] .= ' active' :
                 $this->wrap_options['class'] = 'active';
+
         }
-        
+
     }
 
 
     protected function getTextWrapperOptions()
     {
         $options = '';
-            
-            foreach($this->text_wrapper_options as $attr=>$value)
-            {
-                $options.= " $attr = '$value'";
-            }
-            
-            return $options;
+
+        foreach($this->text_wrapper_options as $attr=>$value)
+        {
+            $options.= " $attr = '$value'";
+        }
+
+        return $options;
     }
-    
+
     protected function getWrapOptions()
     {
         $options = '';
-        
+
         foreach($this->wrap_options as $attr=>$value)
         {
             $options.= " $attr = '$value'";
         }
-            
-            return $options;
+
+        return $options;
     }
 
     /**
@@ -235,6 +254,11 @@ class Link extends ObjectBase
         return $this;
     }
 
+    public function setActive($active){
+        $this->active = $active;
+        return $this;
+    }
 
-    
+
+
 }

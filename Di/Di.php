@@ -151,7 +151,7 @@ class Di
             }
 
             if (is_object($value) && \get_called_class($value) == \get_called_class($class_name)) {
-                return $value;
+                return clone $value;
             }
         }
 
