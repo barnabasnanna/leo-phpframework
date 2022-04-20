@@ -31,8 +31,25 @@ abstract class Input implements InputInterface
     protected $model; //instance of Leo\MainModel
     protected $visible = true;
     protected $label_options = [];
+    protected $requiredText = '(required)';
 
+    /**
+     * @return string
+     */
+    public function getRequiredText(): string
+    {
+        return $this->requiredText;
+    }
 
+    /**
+     * @param string $requiredText
+     * @return Input
+     */
+    public function setRequiredText(string $requiredText): Input
+    {
+        $this->requiredText = $requiredText;
+        return $this;
+    }
 
 
     public function __construct($name, array $options = [])
@@ -40,7 +57,7 @@ abstract class Input implements InputInterface
         $this->setName($name);
         $this->setOptions($options);
     }
-    
+
     public function getLabelOptions()
     {
         $label_options = '';
@@ -52,7 +69,7 @@ abstract class Input implements InputInterface
 
         return $label_options;
     }
-    
+
     public function setLabelOptions(array $label_options)
     {
         $this->label_options = $label_options;
@@ -63,15 +80,15 @@ abstract class Input implements InputInterface
     {
         try
         {
-            return sprintf($this->getTemplate(), 
-                    $this->getLabelOptions(),
-                    $this->getId(), 
-                    $this->getLabel(),
-                    $this->getId(), 
-                    $this->getName(),
-                    $this->getOptions(),
-                    $this->getValue(),
-                    $this->getHint());
+            return sprintf($this->getTemplate(),
+                $this->getLabelOptions(),
+                $this->getId(),
+                $this->getLabel(),
+                $this->getId(),
+                $this->getName(),
+                $this->getOptions(),
+                $this->getValue(),
+                $this->getHint());
         }
         catch (Exception $ex)
         {
@@ -84,6 +101,10 @@ abstract class Input implements InputInterface
         if (empty($this->label))
         {
             $this->setLabel($this->getCleanName());
+        }
+
+        if (isset($this->options['required'])){
+            $this->label.= $this->getRequiredText();
         }
 
         return $this->label;
@@ -107,11 +128,11 @@ abstract class Input implements InputInterface
             $options = array_merge($this->options, ['required'=>'required']);
             $this->setOptions($options);
         }
-        
+
         return $this;
-        
+
     }
-    
+
     /**
      * @param bool $visible
      */
@@ -119,9 +140,9 @@ abstract class Input implements InputInterface
     {
         $this->visible = $visible;
     }
-    
+
     /**
-     * 
+     *
      * @return boolean
      */
     public function getVisible()
@@ -177,7 +198,7 @@ abstract class Input implements InputInterface
         return $this->type;
     }
 
-    
+
     public function setName($name = '')
     {
         $this->name = $name;
@@ -195,20 +216,20 @@ abstract class Input implements InputInterface
         $this->value = $value;
         return $this;
     }
-    
+
     public function getValue()
     {
         return $this->value;
-        
+
     }
-    
+
     protected function getCleanName()
     {
-        
-        return is_null($this->getModel()) ? 
-                    ucwords($this->clean($this->getName(), true))
-                : $this->getModel()->getPropertyLabel($this->getName());
-        
+
+        return is_null($this->getModel()) ?
+            ucwords($this->clean($this->getName(), true))
+            : $this->getModel()->getPropertyLabel($this->getName());
+
     }
 
     public function setTemplate($template)
@@ -216,7 +237,7 @@ abstract class Input implements InputInterface
         $this->template = $template;
         return $this;
     }
-    
+
     public function getTemplate()
     {
         return $this->template;
@@ -233,7 +254,7 @@ abstract class Input implements InputInterface
         $s = preg_replace('/[^A-Za-z0-9]/', ' ', $str);
         return $lowerCase ? strtolower($s) : $s;
     }
-    
+
     public function getWrap()
     {
         return $this->wrap;
@@ -245,23 +266,23 @@ abstract class Input implements InputInterface
         $this->wrap->container = $container;
         $this->wrap->options = $options;
         $options_string = '';
-        
+
         foreach($options as $key=>$value)
         {
             $options_string.= " $key = '$value' ";
         }
-        
+
         $this->wrap->options_string = $options_string;
-        
+
         $wrap_template = '<%s %s>%s</%s>';
-        
-        $new_template = sprintf($wrap_template, $this->wrap->container, $this->wrap->options_string, 
-                $this->getTemplate(), $this->wrap->container);
-        
+
+        $new_template = sprintf($wrap_template, $this->wrap->container, $this->wrap->options_string,
+            $this->getTemplate(), $this->wrap->container);
+
         $this->setTemplate($new_template);
         return $this;
     }
-    
+
     public function getHint()
     {
         return $this->hint;
@@ -272,7 +293,7 @@ abstract class Input implements InputInterface
         $this->hint = $hint;
         return $this;
     }
-    
+
     public function getModel()
     {
         return $this->model;
@@ -284,5 +305,5 @@ abstract class Input implements InputInterface
         return $this;
     }
 
-    
+
 }
