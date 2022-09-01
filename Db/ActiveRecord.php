@@ -34,7 +34,7 @@ class ActiveRecord extends MainModel
     }
 
     /**
-     * Returns the class that constructs and run database queries 
+     * Returns the class that constructs and run database queries
      * @return \Leo\Helpers\Constructor
      */
     public function getDb()
@@ -68,7 +68,7 @@ class ActiveRecord extends MainModel
      */
     protected function afterSave()
     {
-        
+
     }
 
     /**
@@ -113,7 +113,7 @@ class ActiveRecord extends MainModel
 
     /**
      * Saves a model to database. If a new model, insert is performed else an update is done.
-     * 
+     *
      * @param bool $runValidation should validation be performed before save
      * @param array $columns_to_save columns to save. if null all model table fields are saved
      * @return boolean return true if operation was successful. false otherwise
@@ -131,14 +131,14 @@ class ActiveRecord extends MainModel
             {
                 if(!$this->getDb()->saveModel($this, $columns_to_save))
                 {
-                   return false; 
+                   return false;
                 }
                 else
                 {
                     if($this->getIsNewRecord())
                     {
                         $this->setProperty(
-                            $this->getPrimaryColumn(), 
+                            $this->getPrimaryColumn(),
                             $this->getDb()->getlastInsertId(),
                             false
                             );
@@ -147,15 +147,15 @@ class ActiveRecord extends MainModel
                     $this->afterSave();
 
                     $this->setIsNewRecord(false);
-                    
+
                 }
-                
+
             }
         }
 
         return !$this->hasErrors();
     }
-    
+
     /**
      * Returns the value of the primary column
      * @return mixed
@@ -164,7 +164,7 @@ class ActiveRecord extends MainModel
     {
         return $this->getPropertyValue($this->getPrimaryColumn());
     }
-    
+
     /**
      * Sets the value of the primary column of model
      * @param string $value
@@ -176,7 +176,7 @@ class ActiveRecord extends MainModel
             $this->setProperty($this->getPrimaryColumn(), $value);
         }
     }
-    
+
     /**
      * Returns the primary column name of model's table
      * @return string
@@ -189,7 +189,7 @@ class ActiveRecord extends MainModel
     /**
      * Returns a class which provides various information about the table the
      * model is associated with
-     * 
+     *
      * @return \Leo\Db\TableInfo
      */
     public function getTableInfo()
@@ -201,7 +201,7 @@ class ActiveRecord extends MainModel
 
         return $this->table_info;
     }
-    
+
     /**
      * Returns the columns of the database table model is related to
      * @return array
@@ -210,7 +210,7 @@ class ActiveRecord extends MainModel
     {
         return $this->getTableInfo()->getColumns();
     }
-    
+
     /**
      * Return an array of model's db names as keys and values as values
      * @return array
@@ -222,24 +222,24 @@ class ActiveRecord extends MainModel
 
     /**
      * Set the class that handles table schema information
-     * @param TableInfo $table_info
+     * @param TableInfo|null $table_info
      * @return ActiveRecord
      */
-    public function setTableInfo(TableInfo $table_info)
+    public function setTableInfo(TableInfo $table_info=null): static
     {
         $this->table_info = $table_info;
         return $this;
     }
-    
+
     /**
-     * 
+     *
      * @return boolean true if model is a new record
      */
     public function getIsNewRecord()
     {
         return $this->isNewRecord;
     }
-    
+
     /**
      * Set the model is a new record
      * @param bool $value
@@ -250,23 +250,23 @@ class ActiveRecord extends MainModel
         $this->isNewRecord = $value;
         return $this;
     }
-    
 
-    
+
+
     /**
      * Load a model by it's attributes
      * @param array $attributes
-     * @param array $selected_columns 
+     * @param array $selected_columns
      * @return self | null
      */
     public static function getByAttribute(array $attributes,array $selected_columns = ['*'], array $orderBy = [])
     {
         $db = leo()->getDb();
-        
+
         $column_params = $db->getPdoFormat(
                 $attributes
         );
-        
+
         $query = $db->table(static::getTableName())->select($selected_columns);
 
         foreach ($orderBy as $order) {
@@ -276,15 +276,15 @@ class ActiveRecord extends MainModel
                 $query->order($order);
             }
         }
-        
+
         //create where conditional of sql statement
         foreach($column_params['columns'] as $column_name=>$placeholder)
         {
-           $query->where([$column_name,$placeholder], [$placeholder=>$column_params['params'][$placeholder]]); 
+           $query->where([$column_name,$placeholder], [$placeholder=>$column_params['params'][$placeholder]]);
         }
 
         $query->limit([1]);
-        
+
         return $query->run()->loadClass(new static());
     }
 
@@ -304,7 +304,7 @@ class ActiveRecord extends MainModel
         return leo()->getDb()->table(static::getTableName())
                 ->where([$tableInfo->getPrimaryColumn(),$id])
                 ->select( $select_columns?:$tableInfo->getPrefixedColumns())->run()->loadClass(new static());
-                        
+
     }
 
     /**
@@ -334,7 +334,7 @@ class ActiveRecord extends MainModel
     public static function getAllByAttribute(array $attributes, $select_columns = [], $orderBy=[])
     {
         $db = leo()->getDb();
-        
+
         $column_params = $db->getPdoFormat(
                 $attributes
         );
@@ -347,7 +347,7 @@ class ActiveRecord extends MainModel
             $tableInfo = Leo::lc('tableInfo', array('name' => array(static::getTableName())));
             $select_columns = $tableInfo->getPrefixedColumns();
         }
-        
+
         $query = $db->table(static::getTableName())->select($select_columns);
 
         foreach ($orderBy as $order) {
@@ -361,7 +361,7 @@ class ActiveRecord extends MainModel
         //create where conditional of sql statement
         foreach($column_params['columns'] as $column_name=>$placeholder)
         {
-           $query->where([$column_name,$placeholder], [$placeholder=>$column_params['params'][$placeholder]]); 
+           $query->where([$column_name,$placeholder], [$placeholder=>$column_params['params'][$placeholder]]);
         }
 
         return $query->run()->loadAll(new static());

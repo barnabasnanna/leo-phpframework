@@ -13,6 +13,7 @@ class BreadCrumbs
 {
 
     protected static $items = [];
+    protected static $separator = '/';
     protected static $template = <<<TEM
 <ol class="breadcrumb">
 %s
@@ -32,11 +33,15 @@ TEM;
     public static function display()
     {
         if(!empty(static::getItems()))
-        return sprintf(static::$template,join(' / ',static::getItems()));
+        return sprintf(static::$template, join(static::$separator, static::getItems()));
     }
 
     public function reset()
     {
         static::$items = [];
+    }
+
+    public static function setSeparator($separator){
+        self::$separator = $separator;
     }
 }

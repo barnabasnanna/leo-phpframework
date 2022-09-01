@@ -36,7 +36,7 @@ class NotifyCollection extends myIterator
 
     /**
      * Template used to wrap notification messages
-     * @var string 
+     * @var string
      */
     protected static $template = '<div class="panel panel-%s">
                             <div class="panel-heading">
@@ -79,13 +79,13 @@ class NotifyCollection extends myIterator
      * Add validation errors
      * @param array $errors Validation errors
      */
-    public function addVaidationErrors(array $errors)
+    public function addValidationErrors(array $errors)
     {
         $this->setType('error');
 
         foreach ($errors as $key => $error_messages)
-        { 
-            
+        {
+
             if (is_array($error_messages))
             {
                 foreach ($error_messages as $error_message)
