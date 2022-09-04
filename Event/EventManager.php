@@ -31,12 +31,21 @@ class EventManager extends ObjectBase
      */
     protected static $throwException = true;
 
+    protected $event;
+
     public static function cleanName($eventName)
     {
         if (!empty($eventName))
         {
             return preg_replace('/\W/', '_', strtolower($eventName));
         }
+    }
+
+    /**
+     * @return Event
+     */
+    public function getEvent(){
+        return $this->event;
     }
 
     /**
@@ -52,7 +61,8 @@ class EventManager extends ObjectBase
         $event = new Event();
         $event->setEventName(self::cleanName($event_name));
         $event->setEventParams($event_params);
-        self::runEvent($event, $targetPackageNameSpace);
+        $this->event = $event;
+        $this->throw($event, $targetPackageNameSpace);
     }
 
     /**
@@ -152,9 +162,7 @@ class EventManager extends ObjectBase
      * @param \Leo\Event\Event $event
      * @param string|null $targetPackageNameSpace full namespace path of target class
      */
-    private static function runEvent(Event $event, string $targetPackageNameSpace=null)
-    {
-
+    public function throw(Event $event, string $targetPackageNameSpace=null){
         try
         {
             leo()->getLogger()->write('Dispatching event ' . $event->getEventName(), LOG_TYPE_DEBUG);
@@ -162,17 +170,13 @@ class EventManager extends ObjectBase
             //check local storage
             if (array_key_exists($event->getEventName(), self::getEventHandlers()))
             {
-
                 $handler_configs = self::$eventHandlers[$event->getEventName()];
-
                 foreach ($handler_configs as $handler_config)
                 {
                     $handler_config  = self::inspectHandler($handler_config,$targetPackageNameSpace);
-
                     if (false!==$handler_config)
                     {
                         $eventHandler = static::loadClass($handler_config);
-
                         if ($eventHandler instanceof I_EventHandler)
                         {
                             leo()->getLogger()->write('Passing event to handler ' . get_class($eventHandler), LOG_TYPE_DEBUG);
@@ -180,8 +184,8 @@ class EventManager extends ObjectBase
                             $eventHandler->setEvent($clonedEvent);
                             $eventHandler->run();
                             if($clonedEvent->getResult()) {//has error
-                                //copy any errors from cloned Event to the main event thrown
-                                $event->addResult('_dispatch_errors_', $clonedEvent->getResult());
+                                //copy result from cloned Event to the main event thrown
+                                $event->addResult($event->getEventName(),$clonedEvent->getResult());
                             }
                         }
                     }
